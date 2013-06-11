@@ -18,7 +18,7 @@ doTerra <- function(f,...){
 
 
 init()
-doTerraFile("/home/sguha/mystuff/programming/terra/tbase3.t")
+doTerraFile("/home/sguha/mystuff/programming/terrific/tbase3.t")
 doTerra("initialize_terra", list(NULL,NA_integer_,NaN,NA_real_,Inf,.GlobalEnv,baseenv(),emptyenv(),NA_character_))
 x <- runif(10)
 x <- c(2+3i, 4+5i)
