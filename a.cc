@@ -181,12 +181,26 @@ extern "C" {
       Rf_error("invalid call: %s", cmd);
       return(R_NilValue);
     }
+    int rerr;
     for(i = 0; i < Rf_length(cmdexpr); i++)
-      ans = Rf_eval(VECTOR_ELT(cmdexpr, i), R_GlobalEnv);
+      ans = R_tryEval(VECTOR_ELT(cmdexpr, i), R_GlobalEnv,&rerr);
     UNPROTECT(2);
     return(ans);
   }
-
+  // SEXP rfunction(const char* fname, const char* ns, int args){
+  //   SEXP Package;
+  //   PROTECT(
+  // 	    Package = eval( lang2( install("getNamespace"),
+  // 				   ScalarString(mkChar(ns)) ),
+  // 			    R_GlobalEnv
+  // 			    )
+  // 	    ); 
+    
+    
+  // }
+  SEXP getGlobalEnv(){
+    return R_GlobalEnv;
+  }
   int type(SEXP o){
     return TYPEOF(o);
   }

@@ -13,6 +13,7 @@ Rinternals =  terralib.includecstring [[
   #include <Rmath.h>
   #include <a.h>
   SEXP rexpress(const char* );
+  SEXP getGlobalEnv();
   const  char *mychar(SEXP );
   int type(SEXP);
   _RConstants*  getConstants();
@@ -47,6 +48,7 @@ end
 R.constants = global(Rinternals.getConstants(), Rinternals._RConstants)
 R.Complex = Rinternals.Rcomplex
 R.Complex:complete()
+
 terra R.Complex:abs()
    return Cmath.sqrt(self.r*self.r+self.i*self.i)
 end
@@ -58,7 +60,6 @@ end
 
 terra initialize_terra(it:R.SEXP)
 end
-
 -- Evaluates a string and returns a SEXP
 -- @param q The R query string
 terra R.evalString(q : &int8): R.SEXP
@@ -147,7 +148,7 @@ local function typedArray(atype)
    end
    -- Creates an newialized array from a single number
    -- @param initial intial value
-   local z3 = terra (initial : pa.ctype)
+   R["newScalar" .. pa.pfx] = terra (initial : pa.ctype)
       var a: ArrayT
       a.sexp = Rinternals.Rf_allocVector([atype], 1)
       ffi.gc(a.sexp,R.unprotector)
@@ -159,7 +160,7 @@ local function typedArray(atype)
    end
    R[ "new" .. pa.pfx]:adddefinition(z1:getdefinitions()[1])
    R[ "new" .. pa.pfx]:adddefinition(z2:getdefinitions()[1])
-   R[ "new" .. pa.pfx]:adddefinition(z3:getdefinitions()[1])
+   -- R[ "newScalar" .. pa.pfx]:adddefinition(z3:getdefinitions()[1])
    R[ "new" .. pa.pfx]:adddefinition(z4:getdefinitions()[1])
    terra ArrayT:get(index:int) : pa.ctype
       return self.ptr[index]
@@ -327,11 +328,80 @@ terra R.LogicalVector:set(index:int,value:bool)
 end
 
 
-R.newFromStringArray:printpretty()
+-- https://gist.github.com/Sharpie/323498
+-- X(fname :&int8, namespace :&int8 , len :int)
+local function X(fname, namespace, len)
+   local z1 = Rinternals.Rf_ScalarString(Rinternals.Rf_mkChar(namespace))
+   local z2 = Rinternals.Rf_lang2(Rinternals.Rf_install("getNamespace"),z1)
+   local nspace = Rinternals.Rf_eval(z2,Rinternals.getGlobalEnv())
+   -- ffi.gc(nspace,R.unprotector)
+   -- Rinternals.Rf_protect(nspace)
+   
+   local langcall = Rinternals["Rf_lang" .. (len+1)]
+   local fncall  = Rinternals.Rf_install(fname)
+   -- ffi.gc(fncall,R.unprotector)
+   -- Rinternals.Rf_protect(fncall)
+   if len == 1 then 
+      return 
+   	 terra (arg1: R.SEXP)
+   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1), nspace)
+   	 ffi.gc(result,R.unprotector)
+   	 Rinternals.Rf_protect(result)
+   	 return result
+   	 end
+   elseif len == 2 then 
+      return 
+   	 terra (arg1: R.SEXP,arg2 : R.SEXP)
+   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2), nspace)
+   	 ffi.gc(result,R.unprotector)
+   	 Rinternals.Rf_protect(result)
+   	 return result
+   	 end
+   elseif len == 3 then 
+      return 
+   	 terra (arg1: R.SEXP,arg2 : R.SEXP,arg3 : R.SEXP)
+   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2,arg3), nspace)
+   	 ffi.gc(result,R.unprotector)
+   	 Rinternals.Rf_protect(result)
+   	 return result
+   	 end
+   elseif len == 4 then 
+      return 
+   	 terra (arg1: R.SEXP,arg2 : R.SEXP,arg3 : R.SEXP,arg4 : R.SEXP)
+   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2,arg3,arg4), nspace)
+   	 ffi.gc(result,R.unprotector)
+   	 Rinternals.Rf_protect(result)
+   	 return result
+   	 end
+   elseif len == 5 then 
+      return 
+   	 terra (arg1: R.SEXP,arg2 : R.SEXP,arg3 : R.SEXP,arg4 : R.SEXP,arg5 : R.SEXP)
+   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2,arg3,arg4,arg5), nspace)
+   	 ffi.gc(result,R.unprotector)
+   	 Rinternals.Rf_protect(result)
+   	 return result
+   	 end
+   elseif len == 6 then 
+      return 
+   	 terra (arg1: R.SEXP,arg2 : R.SEXP,arg3 : R.SEXP,arg4 : R.SEXP,arg5 : R.SEXP,arg6: R.SEXP)
+   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2,arg3,arg4,arg5,arg6), nspace)
+   	 ffi.gc(result,R.unprotector)
+   	 Rinternals.Rf_protect(result)
+   	 return result
+   	 end
+   end
+end
+
+
+runif = X("runif","stats",3)
+-- trunif = terralib.cast( {R.SEXP,R.SEXP,R.SEXP} -> R.SEXP, runif)
+-- runif:printpretty()
 terra testOne(p:R.SEXP)
    var b = R.newString(p,false)
    var c = R.newFromStringArray(arrayof(rawstring,"one","two","two"),3)
-   return R.newFromStringArray(c:get(1),1)
+   var d = R.newScalarReal(1.02)
+   return runif(R.newScalarReal(10).sexp,R.newScalarReal(1).sexp,R.newScalarReal(10).sexp)
+   -- return R.newFromStringArray(c:get(1),1)
 end
 -- testOne:printpretty()
 -- ptable(Rinternals)
