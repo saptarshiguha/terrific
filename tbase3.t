@@ -369,7 +369,10 @@ end
 terra R.defineVariable(name :&int8, value:R.SEXP)
    Rinternals.Rf_defineVar(Rinternals.Rf_install(name),value,R.constants.GlobalEnv)
 end
-R.getNamespace = R.makeRFunction("getNamespace",nil,1)
+local getNamespace = R.makeRFunction("getNamespace",nil,1)
+R.getNamespace  = terra(name : &int8)
+   return getNamespace(R.newScalarString(name).sexp)
+end
 
 
 -- runif = R.makeRFunction("runif","stats",3)
@@ -383,7 +386,7 @@ terra testOne(p:R.SEXP)
    -- return runif(R.newScalarReal(10).sexp,R.newScalarReal(1).sexp,R.newScalarReal(10).sexp)
    social(R.newScalarReal(10).sexp)
    c:setAttr("milestone",d.sexp)
-   -- R.print(R.getNamespace(R.newScalarString("base").sexp))
+   -- R.print(R.getNamespace("base"))
    return c
    -- return R.newFromStringArray(c:get(1),1)
 end
