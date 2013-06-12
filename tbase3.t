@@ -330,17 +330,17 @@ end
 
 -- https://gist.github.com/Sharpie/323498
 -- X(fname :&int8, namespace :&int8 , len :int)
-local function X(fname, namespace, len)
-   local z1 = Rinternals.Rf_ScalarString(Rinternals.Rf_mkChar(namespace))
-   local z2 = Rinternals.Rf_lang2(Rinternals.Rf_install("getNamespace"),z1)
-   local nspace = Rinternals.Rf_eval(z2,Rinternals.getGlobalEnv())
-   -- ffi.gc(nspace,R.unprotector)
-   -- Rinternals.Rf_protect(nspace)
-   
+function R.makeRFunction(fname, namespace, len)
+   local nspace
+   if not namespace == nil then
+      local z1 = Rinternals.Rf_ScalarString(Rinternals.Rf_mkChar(namespace))
+      local z2 = Rinternals.Rf_lang2(Rinternals.Rf_install("getNamespace"),z1)
+      nspace = Rinternals.Rf_eval(z2,Rinternals.getGlobalEnv())
+   else
+      nspace = Rinternals.getGlobalEnv()
+   end
    local langcall = Rinternals["Rf_lang" .. (len+1)]
    local fncall  = Rinternals.Rf_install(fname)
-   -- ffi.gc(fncall,R.unprotector)
-   -- Rinternals.Rf_protect(fncall)
    if len == 1 then 
       return 
    	 terra (arg1: R.SEXP)
@@ -393,14 +393,17 @@ local function X(fname, namespace, len)
 end
 
 
-runif = X("runif","stats",3)
+runif = R.makeRFunction("runif","stats",3)
+social = R.makeRFunction("mySocialClub",nil,1)
+
 -- trunif = terralib.cast( {R.SEXP,R.SEXP,R.SEXP} -> R.SEXP, runif)
--- runif:printpretty()
+runif:disas()
 terra testOne(p:R.SEXP)
    var b = R.newString(p,false)
    var c = R.newFromStringArray(arrayof(rawstring,"one","two","two"),3)
    var d = R.newScalarReal(1.02)
-   return runif(R.newScalarReal(10).sexp,R.newScalarReal(1).sexp,R.newScalarReal(10).sexp)
+   -- return runif(R.newScalarReal(10).sexp,R.newScalarReal(1).sexp,R.newScalarReal(10).sexp)
+   return social(R.newScalarReal(10).sexp)
    -- return R.newFromStringArray(c:get(1),1)
 end
 -- testOne:printpretty()

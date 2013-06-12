@@ -15,7 +15,7 @@ doTerra <- function(f,...){
   .Call(fns[length(l)],f,...)
 }
 
-
+mySocialClub <- function(n) cat(sprintf("the number you called is %s",n))
 
 init()
 doTerraFile("/home/sguha/mystuff/programming/terrific/tbase3.t")
