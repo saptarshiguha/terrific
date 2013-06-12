@@ -337,8 +337,7 @@ terra R.LogicalVector:set(index:int,value:bool)
    @(self.ptr+index) = [int](value)
 end
 
-
-function R.makeRFunction(fname, namespace, len)
+function R.makeR2Function(fname, namespace, len)
    local nspace
    if not namespace == nil then
       local z1 = Rinternals.Rf_ScalarString(Rinternals.Rf_mkChar(namespace))
@@ -349,62 +348,23 @@ function R.makeRFunction(fname, namespace, len)
    end
    local langcall = Rinternals["Rf_lang" .. (len+1)]
    local fncall  = Rinternals.Rf_install(fname)
-   if len == 1 then 
-      return 
-   	 terra (arg1: R.SEXP)
-   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1), nspace)
-   	 ffi.gc(result,R.unprotector)
-   	 Rinternals.Rf_protect(result)
-   	 return result
-   	 end
-   elseif len == 2 then 
-      return 
-   	 terra (arg1: R.SEXP,arg2 : R.SEXP)
-   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2), nspace)
-   	 ffi.gc(result,R.unprotector)
-   	 Rinternals.Rf_protect(result)
-   	 return result
-   	 end
-   elseif len == 3 then 
-      return 
-   	 terra (arg1: R.SEXP,arg2 : R.SEXP,arg3 : R.SEXP)
-   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2,arg3), nspace)
-   	 ffi.gc(result,R.unprotector)
-   	 Rinternals.Rf_protect(result)
-   	 return result
-   	 end
-   elseif len == 4 then 
-      return 
-   	 terra (arg1: R.SEXP,arg2 : R.SEXP,arg3 : R.SEXP,arg4 : R.SEXP)
-   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2,arg3,arg4), nspace)
-   	 ffi.gc(result,R.unprotector)
-   	 Rinternals.Rf_protect(result)
-   	 return result
-   	 end
-   elseif len == 5 then 
-      return 
-   	 terra (arg1: R.SEXP,arg2 : R.SEXP,arg3 : R.SEXP,arg4 : R.SEXP,arg5 : R.SEXP)
-   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2,arg3,arg4,arg5), nspace)
-   	 ffi.gc(result,R.unprotector)
-   	 Rinternals.Rf_protect(result)
-   	 return result
-   	 end
-   elseif len == 6 then 
-      return 
-   	 terra (arg1: R.SEXP,arg2 : R.SEXP,arg3 : R.SEXP,arg4 : R.SEXP,arg5 : R.SEXP,arg6: R.SEXP)
-   	 var result = Rinternals.Rf_eval( langcall( fncall, arg1,arg2,arg3,arg4,arg5,arg6), nspace)
-   	 ffi.gc(result,R.unprotector)
-   	 Rinternals.Rf_protect(result)
-   	 return result
-   	 end
+   local params = {}
+   for i = 1,len do
+      params[i] = symbol(R.SEXP,"argument" ..i)
    end
+   return
+      terra([params])
+         var result = Rinternals.Rf_eval( langcall( fncall, [params]), nspace)
+   	 ffi.gc(result,R.unprotector)
+   	 Rinternals.Rf_protect(result)
+   	 return result
+      end
 end
 
-
-runif = R.makeRFunction("runif","stats",3)
-social = R.makeRFunction("mySocialClub",nil,1)
-
-runif:disas()
+runif = R.makeR2Function("runif","stats",3)
+social = R.makeR2Function("mySocialClub",nil,1)
+runif:printpretty()
+-- runif:disas()
 terra testOne(p:R.SEXP)
    var b = R.newString(p,false)
    var c = R.newFromStringArray(arrayof(rawstring,"one","two","two"),3)
