@@ -305,7 +305,9 @@ terra moshoo( other: R.SEXP)
    [blah(other,other)]
 end
 R['newFromStringArray']  = moshoo
-
+R['newScalarString'] = terra ( other: (&int8))
+   [blah(other,`Rinternals.Rf_mkChar( other))]
+end
 terra R.StringVector:set(index:int, value: &int8)
    Rinternals.SET_STRING_ELT(self.sexp, index, Rinternals.Rf_mkChar( value))
 end
@@ -337,7 +339,7 @@ terra R.LogicalVector:set(index:int,value:bool)
    @(self.ptr+index) = [int](value)
 end
 
-function R.makeR2Function(fname, namespace, len)
+function R.makeRFunction(fname, namespace, len)
    local nspace
    if not namespace == nil then
       local z1 = Rinternals.Rf_ScalarString(Rinternals.Rf_mkChar(namespace))
@@ -361,9 +363,18 @@ function R.makeR2Function(fname, namespace, len)
       end
 end
 
-runif = R.makeR2Function("runif","stats",3)
-social = R.makeR2Function("mySocialClub",nil,1)
-runif:printpretty()
+terra R.defineVariable(name :&int8, value:R.SEXP,  namespace:R.SEXP)
+   Rinternals.Rf_defineVar(Rinternals.Rf_install(name),value,namespace)
+end
+terra R.defineVariable(name :&int8, value:R.SEXP)
+   Rinternals.Rf_defineVar(Rinternals.Rf_install(name),value,R.constants.GlobalEnv)
+end
+R.getNamespace = R.makeRFunction("getNamespace",nil,1)
+
+
+-- runif = R.makeRFunction("runif","stats",3)
+social = R.makeRFunction("mySocialClub",nil,1)
+-- runif:printpretty()
 -- runif:disas()
 terra testOne(p:R.SEXP)
    var b = R.newString(p,false)
@@ -372,6 +383,7 @@ terra testOne(p:R.SEXP)
    -- return runif(R.newScalarReal(10).sexp,R.newScalarReal(1).sexp,R.newScalarReal(10).sexp)
    social(R.newScalarReal(10).sexp)
    c:setAttr("milestone",d.sexp)
+   -- R.print(R.getNamespace(R.newScalarString("base").sexp))
    return c
    -- return R.newFromStringArray(c:get(1),1)
 end
