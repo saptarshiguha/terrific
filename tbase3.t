@@ -52,7 +52,6 @@ R.Complex:complete()
 terra R.Complex:abs()
    return Cmath.sqrt(self.r*self.r+self.i*self.i)
 end
-
 terra R.unprotector(x:&Rinternals.SEXPREC)
    Cstdio.printf("Popping Stack\n")
    Rinternals.Rf_unprotect(1)
@@ -168,6 +167,9 @@ local function typedArray(atype)
    terra ArrayT:set(index:int,value:pa.ctype) 
       @(self.ptr+index) = value
    end
+   terra ArrayT:setAttr( attr:&int8, value :R.SEXP)
+      Rinternals.Rf_setAttrib(self.sexp,Rinternals.Rf_install(attr),value)
+   end
 
    return ArrayT
 end
@@ -252,6 +254,9 @@ local function typedOtherArray(atype)
    terra ArrayT:set(index:int, value: R.SEXP)
       [pa.accesor](self.sexp, index, [quickly(atype,value)])
    end
+   terra ArrayT:setAttr( attr:&int8, value :R.SEXP)
+      Rinternals.Rf_setAttrib(self.sexp,Rinternals.Rf_install(attr),value)
+   end
 
    return ArrayT
 end
@@ -328,8 +333,6 @@ terra R.LogicalVector:set(index:int,value:bool)
 end
 
 
--- https://gist.github.com/Sharpie/323498
--- X(fname :&int8, namespace :&int8 , len :int)
 function R.makeRFunction(fname, namespace, len)
    local nspace
    if not namespace == nil then
