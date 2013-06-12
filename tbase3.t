@@ -170,6 +170,9 @@ local function typedArray(atype)
    terra ArrayT:setAttr( attr:&int8, value :R.SEXP)
       Rinternals.Rf_setAttrib(self.sexp,Rinternals.Rf_install(attr),value)
    end
+   terra ArrayT:attr(what: &int8)
+      return Rinternals.Rf_getAttrib(self.sexp,Rinternals.Rf_install(what))
+   end
 
    return ArrayT
 end
@@ -257,7 +260,9 @@ local function typedOtherArray(atype)
    terra ArrayT:setAttr( attr:&int8, value :R.SEXP)
       Rinternals.Rf_setAttrib(self.sexp,Rinternals.Rf_install(attr),value)
    end
-
+   terra ArrayT:attr(what: &int8)
+      return Rinternals.Rf_getAttrib(self.sexp,Rinternals.Rf_install(what))
+   end
    return ArrayT
 end
 R.StringVector = typedOtherArray(R.types.STRSXP)
@@ -399,14 +404,15 @@ end
 runif = R.makeRFunction("runif","stats",3)
 social = R.makeRFunction("mySocialClub",nil,1)
 
--- trunif = terralib.cast( {R.SEXP,R.SEXP,R.SEXP} -> R.SEXP, runif)
 runif:disas()
 terra testOne(p:R.SEXP)
    var b = R.newString(p,false)
    var c = R.newFromStringArray(arrayof(rawstring,"one","two","two"),3)
    var d = R.newScalarReal(1.02)
    -- return runif(R.newScalarReal(10).sexp,R.newScalarReal(1).sexp,R.newScalarReal(10).sexp)
-   return social(R.newScalarReal(10).sexp)
+   social(R.newScalarReal(10).sexp)
+   c:setAttr("milestone",d.sexp)
+   return c
    -- return R.newFromStringArray(c:get(1),1)
 end
 -- testOne:printpretty()
