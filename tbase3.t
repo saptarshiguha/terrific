@@ -54,9 +54,12 @@ terra R.Complex:abs()
 end
 terra R.unprotector(x:&Rinternals.SEXPREC)
    Cstdio.printf("Popping Stack\n")
-   Rinternals.Rf_unprotect(1)
+   -- Rinternals.Rf_unprotect(1)
+   Rinternals.R_ReleaseObject(x)
 end
-
+terra R.rpreservation(x:R.SEXP)
+   Rinternals.R_PreserveObject(x)
+end
 terra initialize_terra(it:R.SEXP)
 end
 -- Evaluates a string and returns a SEXP
@@ -103,7 +106,7 @@ local function typedArray(atype)
       ffi.gc(a.sexp,R.unprotector)
       a.ptr = [pa.ptraccess](a.sexp)
       a.length = length;
-      Rinternals.Rf_protect(a.sexp)
+      R.rpreservation(a.sexp)
       return(a)
    end
    -- Creates an initialized array from the SEXP other
@@ -114,7 +117,7 @@ local function typedArray(atype)
       if copy then 
 	 a.sexp = Rinternals.Rf_duplicate(other)
 	 ffi.gc(a.sexp,R.unprotector)
-	 Rinternals.Rf_protect(a.sexp)
+	 R.rpreservation(a.sexp)
       else
 	 a.sexp = other
       end
@@ -132,7 +135,7 @@ local function typedArray(atype)
       ffi.gc(a.sexp,R.unprotector)
       a.ptr = [pa.ptraccess](a.sexp)
       a.length = li;
-      Rinternals.Rf_protect(a.sexp)
+      R.rpreservation(a.sexp)
       ffi.copy(a.ptr, initial, sizeof([pa.ctype])*li)
       return a
    end
@@ -140,7 +143,7 @@ local function typedArray(atype)
       var a: ArrayT
       a.sexp = Rinternals.Rf_duplicate(initial.sexp)
       ffi.gc(a.sexp,R.unprotector)
-      Rinternals.Rf_protect(a.sexp)
+      R.rpreservation(a.sexp)
       a.ptr = [pa.ptraccess](a.sexp)
       a.length = initial.length
       return a
@@ -153,7 +156,7 @@ local function typedArray(atype)
       ffi.gc(a.sexp,R.unprotector)
       a.ptr = [pa.ptraccess](a.sexp)
       a.length = 1;
-      Rinternals.Rf_protect(a.sexp)
+      R.rpreservation(a.sexp)
       @(a.ptr) = initial
       return a
    end
@@ -200,7 +203,7 @@ local function typedOtherArray(atype)
       a.sexp = Rinternals.Rf_allocVector([atype], length)
       ffi.gc(a.sexp,R.unprotector)
       a.length = length;
-      Rinternals.Rf_protect(a.sexp)
+      R.rpreservation(a.sexp)
       return(a)
    end
    terra moshoo(other: R.SEXP, copy :bool)
@@ -209,11 +212,11 @@ local function typedOtherArray(atype)
 	 a.sexp = Rinternals.Rf_duplicate(other)
 	 a.length = Rinternals.LENGTH(other)
 	 ffi.gc(a.sexp,R.unprotector)
-	 Rinternals.Rf_protect(a.sexp)
+	 R.rpreservation(a.sexp)
       else
 	 a.sexp = Rinternals.Rf_allocVector([atype], Rinternals.LENGTH(other))
 	 ffi.gc(a.sexp,R.unprotector)
-	 Rinternals.Rf_protect(a.sexp)
+	 R.rpreservation(a.sexp)
 	 a.length = Rinternals.LENGTH(other)
 	 for i=0, a.length do
 	    [pa.accesor](a.sexp, i, [pa.reader](a.sexp,i))
@@ -227,11 +230,11 @@ local function typedOtherArray(atype)
    	 a.sexp = Rinternals.Rf_duplicate(other.sexp)
    	 a.length = other.length
 	 ffi.gc(a.sexp,R.unprotector)
-	 Rinternals.Rf_protect(a.sexp)
+	 R.rpreservation(a.sexp)
       else
    	 a.sexp = Rinternals.Rf_allocVector([atype], other.length)
    	 ffi.gc(a.sexp,R.unprotector)
-   	 Rinternals.Rf_protect(a.sexp)
+   	 R.rpreservation(a.sexp)
    	 a.length = other.length
    	 for i=0, a.length do
    	    [pa.accesor](a.sexp, i, [pa.reader](other.sexp,i))
@@ -273,7 +276,7 @@ terra moshoo( other: &(&int8), length:int )
    var a : R.StringVector
    a.sexp = Rinternals.Rf_allocVector(R.types.STRSXP, length)
    ffi.gc(a.sexp,R.unprotector)
-   Rinternals.Rf_protect(a.sexp)
+   R.rpreservation(a.sexp)
    a.length = length
    for i=0, a.length do
       Rinternals.SET_STRING_ELT(a.sexp, i,Rinternals.Rf_mkChar( other[i])  )
@@ -285,7 +288,7 @@ local function blah(other,v)
 	         var a : R.StringVector
    a.sexp = Rinternals.Rf_allocVector(R.types.STRSXP, 1)
    ffi.gc(a.sexp,R.unprotector)
-   Rinternals.Rf_protect(a.sexp)
+   R.rpreservation(a.sexp)
    a.length = 1
    Rinternals.SET_STRING_ELT(a.sexp, 0,v  )
    return(a)
@@ -328,7 +331,7 @@ local z1 = terra(initial : &bool, li : int)
    ffi.gc(a.sexp,R.unprotector)
    a.ptr =Rinternals.LOGICAL(a.sexp)
    a.length = li;
-   Rinternals.Rf_protect(a.sexp)
+   R.rpreservation(a.sexp)
    for i =0, a.length do
       @(a.ptr + i) = 1* [int](initial[i] == true)
    end
@@ -358,7 +361,7 @@ function R.makeRFunction(fname, namespace, len)
       terra([params])
          var result = Rinternals.Rf_eval( langcall( fncall, [params]), nspace)
    	 ffi.gc(result,R.unprotector)
-   	 Rinternals.Rf_protect(result)
+   	 R.rpreservation(result)
    	 return result
       end
 end
