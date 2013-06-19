@@ -1,0 +1,169 @@
+C = terralib.includec("stdio.h")
+C1 = terralib.includec("stdlib.h")
+ffi = require("ffi")
+local hashfunctions = terralib.includecstring [[	
+unsigned long djb2hash(const char *str)
+{
+    unsigned long hash = 5381;
+    int c;
+    while ( (c = *str++))
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    return hash;
+}
+		 ]]
+
+terra djb2hash(a : &int8) : uint64
+   var hash =  5381ULL
+   var c = @a
+   var i :int8 = 0 -- typing makes a difference
+   while c~=0 do
+      hash = (( hash << 5)+hash) + c
+      i = i+1
+      c = @(a + i)
+   end
+   return hash
+end
+
+local function ptable(w)
+   for key,value in pairs(w) do print(key,value) end
+end
+
+function makeHash(kType,vType,hashfunction)
+   local b = {}
+   local function add(self,key,value)
+      b[hashfunction(key)] = {key,value}
+   end
+   local function exists(self,key)
+      if b[hashfunction(key)]~= nil then
+   	 return true
+      else
+   	 return false
+      end
+   end
+   local function get(self,key)
+      return terralib.cast(vType,b[hashfunction(key)][2])
+   end
+   local function delete(self,key)
+      b[hashfunction(key)] = nil
+   end
+   local struct Hash   {   }
+   Hash.methods.add =  terralib.cast( {&Hash,kType,vType} -> {}, add)
+   Hash.methods.get = terralib.cast( {&Hash,kType} -> {vType}, get)
+   Hash.methods.exists  = terralib.cast( {&Hash,kType} -> {bool}, exists)
+   Hash.methods.del = terralib.cast( {&Hash,kType} -> {}, delete)
+   local struct Iterator
+   {
+      key:kType;
+      value:vType;
+   }
+   local ck,cuk,vk
+   local function setcknil() ck = nil end
+   local function move() ck = next(b,ck)   end
+   local hasNext = terralib.cast({}->bool,function() return ck~=nil end)
+   local tk = terralib.cast({}->kType,function()
+			       local cuk
+			       cuk, vk = unpack(b[ck])
+   			       return cuk
+   				      end)
+   local tv = terralib.cast({}->vType,function() return  vk end)
+
+   terra Iterator:next()
+      move()
+      if hasNext() then do
+	    self.key,self.value = tk(),tv()
+	    return true
+			end
+      else
+	 return false
+      end
+   end
+   terra Hash:makeIter()
+      var f:Iterator
+      setcknil()
+      return f
+   end
+      
+   return Hash
+end
+
+struct ComplexName
+{
+   name: &int8;
+   x : double;
+   y : double;
+}
+
+function strhash(s )
+   -- return tonumber(hashfunctions.djb2hash(s))
+   return tonumber(djb2hash(s))
+end
+
+hashStrToComplex = makeHash(rawstring, &ComplexName,strhash)
+hashIntToComplex = makeHash(int, &ComplexName,function(a) return(tonumber(a)) end)
+
+-- CC = terralib.global(ComplexName,{ name = "foo", x = 1.0, y=2.0})
+
+NN=30
+terra doAdd()
+   var b : hashIntToComplex
+   for i=1,NN do
+      var c : &ComplexName = [&ComplexName](C1.malloc(sizeof(ComplexName)))
+      c.name ,c.x,c.y="foo",1.0,2.0
+      b:add(i,c)
+   end
+   return(&b)
+   
+end
+
+terra doGet(b:&hashIntToComplex)
+   var d : &ComplexName
+   for i=1,NN do
+      d= b:get(i)
+      -- C1.free(d)
+   end
+   C.printf("Name = %s, Real = %f, Imag=%f\n",d.name, d.x,d.y)
+end
+
+
+
+terra doIter(b: &hashIntToComplex)
+   var p =b:makeIter()
+   while p:next() do
+      var v,k = p.value,p.key
+      C.printf("%d %s\n",k,v.name)
+   end
+end
+
+require("os")
+require("string")
+
+function testtime()
+   local x = os.clock()
+   local s
+   local b =   doAdd()
+   print(string.format("elapsed time: %.2f\n", os.clock() - x))
+   x = os.clock()
+   doGet(b)
+   doIter(b)
+   print(string.format("elapsed time: %.2f\n", os.clock() - x))
+end
+
+testtime()
+
+-- djb2hash:disas()
+-- hashfunctions.djb2hash:disas()
+terra Mos()
+   var c: ComplexName = { name = "foo", x = 1.0, y=2.0}
+   var b : hashStrToComplex
+   b:add("foo",&c)
+   var d = b:get("foo")
+   -- var b : hashIntToComplex
+   -- b:add(1,&c)
+   -- var d = b:get(1)
+
+   if d~= nil then
+      C.printf("Name = %s, Real = %f, Imag=%f\n",d.name, d.x,d.y)
+   end
+   C.printf("Name = %s, Real = %f, Imag=%f\n",c.name, c.x,c.y)
+end
+-- Mos()
