@@ -13,7 +13,7 @@ unsigned long djb2hash(const char *str)
 		 ]]
 
 terra djb2hash(a : &int8) : uint64
-   var hash: uint64 = 5381
+   var hash =  5381ULL
    var c = @a
    var i :int8 = 0 -- typing makes a difference
    while c~=0 do
@@ -46,11 +46,38 @@ function makeHash(kType,vType,hashfunction)
    local function delete(self,key)
       b[hashfunction(key)] = nil
    end
+   local struct Pair { k:kType; v:vType;}
    local struct Hash   {   }
    Hash.methods.add =  terralib.cast( {&Hash,kType,vType} -> {}, add)
    Hash.methods.get = terralib.cast( {&Hash,kType} -> {vType}, get)
    Hash.methods.exists  = terralib.cast( {&Hash,kType} -> {bool}, exists)
    Hash.methods.del = terralib.cast( {&Hash,kType} -> {}, delete)
+   local struct Iterator { hasmore:bool}
+   local ck
+   Iterator.methods.initialize = function() ck =  next(b,nil)   end
+   Iterator.methods.hasNext = terralib.cast({&Iterator}->bool,function(self)
+					       if ck ~= nil then
+						  return(true)
+					       else
+						  ck = next(b,nil)
+						  return(false)
+					       end
+					  end)
+   local t1 = terralib.cast({}->kType,function()
+			       local currentk = ck
+			       ck = next(b,ck)
+			       return currentk
+				      end)
+   local t2 = terralib.cast({}->vType,function() return  get(nil,ck) end)
+   terra Iterator:next()
+      return t2(),t1()
+   end
+   terra Hash:makeIter()
+      var f:Iterator
+      f:initialize()
+      return f
+   end
+      
    return Hash
 end
 
@@ -71,7 +98,7 @@ hashIntToComplex = makeHash(int, &ComplexName,function(a) return(tonumber(a)) en
 
 -- CC = terralib.global(ComplexName,{ name = "foo", x = 1.0, y=2.0})
 
-NN=10
+NN=3
 terra doAdd()
    var b : hashIntToComplex
    for i=1,NN do
@@ -80,33 +107,27 @@ terra doAdd()
       b:add(i,c)
    end
    return(&b)
+   
 end
 
 terra doGet(b:&hashIntToComplex)
    var d : &ComplexName
-   for i=1,10 do
+   for i=1,NN do
       d= b:get(i)
-      C1.free(d)
+      -- C1.free(d)
    end
-   -- C.printf("Name = %s, Real = %f, Imag=%f\n",d.name, d.x,d.y)
+   C.printf("Name = %s, Real = %f, Imag=%f\n",d.name, d.x,d.y)
 end
 
 
-terra doHash1()
-   var f="foo"
-   var s : uint64
-   for i=1,50000000 do
-       s=djb2hash(f)
+-- fails miserable for string keys ....
+-- because the stored keys are numbers ....
+terra doIter(b: &hashIntToComplex)
+   var p =b:makeIter()
+   while p:hasNext() do
+      var v,k = p:next()
+      C.printf("%d %s\n",k,v.name)
    end
-   return(s)
-end
-terra doHash2()
-   var f="foo"
-   var s : uint64
-   for i=1,50000000 do
-       s=hashfunctions.djb2hash(f)
-   end
-   return(s)
 end
 
 require("os")
@@ -115,19 +136,18 @@ require("string")
 function testtime()
    local x = os.clock()
    local s
-   s=doHash1()
+   local b =   doAdd()
    print(string.format("elapsed time: %.2f\n", os.clock() - x))
    x = os.clock()
-   s=doHash2()
-   print(s)
-   -- doGet(b)
+   doGet(b)
+   doIter(b)
    print(string.format("elapsed time: %.2f\n", os.clock() - x))
 end
 
 testtime()
 
-djb2hash:disas()
-hashfunctions.djb2hash:disas()
+-- djb2hash:disas()
+-- hashfunctions.djb2hash:disas()
 terra Mos()
    var c: ComplexName = { name = "foo", x = 1.0, y=2.0}
    var b : hashStrToComplex
