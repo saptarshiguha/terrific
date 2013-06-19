@@ -125,8 +125,7 @@ terra doGet(b:&hashIntToComplex)
 end
 
 
--- fails miserable for string keys ....
--- because the stored keys are numbers ....
+
 terra doIter(b: &hashIntToComplex)
    var p =b:makeIter()
    while p:hasNext() do
