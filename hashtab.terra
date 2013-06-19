@@ -51,30 +51,32 @@ function makeHash(kType,vType,hashfunction)
    Hash.methods.get = terralib.cast( {&Hash,kType} -> {vType}, get)
    Hash.methods.exists  = terralib.cast( {&Hash,kType} -> {bool}, exists)
    Hash.methods.del = terralib.cast( {&Hash,kType} -> {}, delete)
-   local struct Iterator { }
+   local struct Iterator {_placeholder:uint8 }
    local ck,cuk,vk
    Iterator.methods.initialize = function()
       ck =  next(b,nil)
-      -- cuk, vk = b[hashfunction(ck)]
+      cuk, vk = unpack(b[hashfunction(ck)])
    end
    Iterator.methods.hasNext = terralib.cast({&Iterator}->bool,function(self)
-					       if ck ~= nil then
-						  return(true)
-					       else
-						  ck = next(b,nil)
-						  return(false)
-					       end
-					  end)
-   -- local tk = terralib.cast({}->kType,function()
-   -- 			       local currentk = cuk
-   -- 			       ck = next(b,ck)
-   -- 			       cuk, vk = b[hashfunction(ck)]
-   -- 			       return currentk
-   -- 				      end)
-   -- local tv = terralib.cast({}->vType,function() return  vk end)
-   -- terra Iterator:next()
-   --    return tv(),tk()
-   -- end
+   					       if ck ~= nil then
+   						  return(true)
+   					       else
+   						  ck = next(b,nil)
+   						  return(false)
+   					       end
+   					  end)
+   local tk = terralib.cast({}->kType,function()
+   			       local currentk = cuk
+   			       ck = next(b,ck)
+			       if ck then 
+				  cuk, vk = unpack(b[hashfunction(ck)])
+			       end
+   			       return currentk
+   				      end)
+   local tv = terralib.cast({}->vType,function() return  vk end)
+   terra Iterator:next()
+      return tv(),tk()
+   end
    terra Hash:makeIter()
       var f:Iterator
       f:initialize()
@@ -127,10 +129,10 @@ end
 -- because the stored keys are numbers ....
 terra doIter(b: &hashIntToComplex)
    var p =b:makeIter()
-   -- while p:hasNext() do
-   --    var v,k = p:next()
-   --    C.printf("%d %s\n",k,v.name)
-   -- end
+   while p:hasNext() do
+      var v,k = p:next()
+      C.printf("%d %s\n",k,v.name)
+   end
 end
 
 require("os")
