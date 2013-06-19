@@ -31,7 +31,7 @@ end
 function makeHash(kType,vType,hashfunction)
    local b = {}
    local function add(self,key,value)
-      b[hashfunction(key)] = value
+      b[hashfunction(key)] = {key,value}
    end
    local function exists(self,key)
       if b[hashfunction(key)]~= nil then
@@ -41,20 +41,22 @@ function makeHash(kType,vType,hashfunction)
       end
    end
    local function get(self,key)
-      return terralib.cast(vType,b[hashfunction(key)])
+      return terralib.cast(vType,b[hashfunction(key)][2])
    end
    local function delete(self,key)
       b[hashfunction(key)] = nil
    end
-   local struct Pair { k:kType; v:vType;}
    local struct Hash   {   }
    Hash.methods.add =  terralib.cast( {&Hash,kType,vType} -> {}, add)
    Hash.methods.get = terralib.cast( {&Hash,kType} -> {vType}, get)
    Hash.methods.exists  = terralib.cast( {&Hash,kType} -> {bool}, exists)
    Hash.methods.del = terralib.cast( {&Hash,kType} -> {}, delete)
-   local struct Iterator { hasmore:bool}
-   local ck
-   Iterator.methods.initialize = function() ck =  next(b,nil)   end
+   local struct Iterator { }
+   local ck,cuk,vk
+   Iterator.methods.initialize = function()
+      ck =  next(b,nil)
+      cuk, vk = b[hashfunction(ck)]
+   end
    Iterator.methods.hasNext = terralib.cast({&Iterator}->bool,function(self)
 					       if ck ~= nil then
 						  return(true)
@@ -63,12 +65,13 @@ function makeHash(kType,vType,hashfunction)
 						  return(false)
 					       end
 					  end)
-   local t1 = terralib.cast({}->kType,function()
-			       local currentk = ck
+   local tk = terralib.cast({}->kType,function()
+			       local currentk = cuk
 			       ck = next(b,ck)
+			       cuk, vk = b[hashfunction(ck)]
 			       return currentk
 				      end)
-   local t2 = terralib.cast({}->vType,function() return  get(nil,ck) end)
+   local tv = terralib.cast({}->vType,function() return  vk end)
    terra Iterator:next()
       return t2(),t1()
    end
