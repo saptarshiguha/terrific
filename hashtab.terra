@@ -55,7 +55,7 @@ function makeHash(kType,vType,hashfunction)
    local ck,cuk,vk
    Iterator.methods.initialize = function()
       ck =  next(b,nil)
-      cuk, vk = b[hashfunction(ck)]
+      -- cuk, vk = b[hashfunction(ck)]
    end
    Iterator.methods.hasNext = terralib.cast({&Iterator}->bool,function(self)
 					       if ck ~= nil then
@@ -65,16 +65,16 @@ function makeHash(kType,vType,hashfunction)
 						  return(false)
 					       end
 					  end)
-   local tk = terralib.cast({}->kType,function()
-			       local currentk = cuk
-			       ck = next(b,ck)
-			       cuk, vk = b[hashfunction(ck)]
-			       return currentk
-				      end)
-   local tv = terralib.cast({}->vType,function() return  vk end)
-   terra Iterator:next()
-      return t2(),t1()
-   end
+   -- local tk = terralib.cast({}->kType,function()
+   -- 			       local currentk = cuk
+   -- 			       ck = next(b,ck)
+   -- 			       cuk, vk = b[hashfunction(ck)]
+   -- 			       return currentk
+   -- 				      end)
+   -- local tv = terralib.cast({}->vType,function() return  vk end)
+   -- terra Iterator:next()
+   --    return tv(),tk()
+   -- end
    terra Hash:makeIter()
       var f:Iterator
       f:initialize()
@@ -127,10 +127,10 @@ end
 -- because the stored keys are numbers ....
 terra doIter(b: &hashIntToComplex)
    var p =b:makeIter()
-   while p:hasNext() do
-      var v,k = p:next()
-      C.printf("%d %s\n",k,v.name)
-   end
+   -- while p:hasNext() do
+   --    var v,k = p:next()
+   --    C.printf("%d %s\n",k,v.name)
+   -- end
 end
 
 require("os")
