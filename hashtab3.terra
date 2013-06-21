@@ -1,0 +1,25 @@
+cio  = terralib.includec("stdio.h")
+clib = terralib.includec("stdlib.h")
+myhash = terralib.includec("myhash.h")
+ffi  = require("ffi")
+
+local function ptable(w)   for key,value in pairs(w) do print(key,value) end end
+
+terra djb2hash(a : &int8) : uint64
+   var hash =  5381ULL
+   var c = @a
+   var i :int8 = 0 -- typing makes a difference
+   while c~=0 do
+      hash = (( hash << 5)+hash) + c
+      i = i+1
+      c = @(a + i)
+   end
+   return hash
+end
+
+function makeHashTable(kType, vType, hashfunction)
+   -- we want to know if kType is a primitive
+   -- if so 
+end
+
+ptable(myhash)
