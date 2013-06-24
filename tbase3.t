@@ -454,12 +454,19 @@ gsl = terralib.includecstring [[
 			       ]]
 terralib.linklibrary("/usr/lib/libgsl.so")
 
+GSL_RNG_INIT = function(rng)
+   return( quote
+	      rng = gsl.gsl_rng_alloc([&gsl.gsl_rng_type] (Rinternals.get_mt19937()))
+	    ffi.gc(rng,gsl.gsl_rng_free)
+      end)
+end
+
 terra doGibbs(p: R.SEXP)
    var p1 = R.newInteger(p, false)
    var N, thin = p1:get(0), p1:get(1)
    var r = R.newReal(N*2)
-   var rng = gsl.gsl_rng_alloc([&gsl.gsl_rng_type] (Rinternals.get_mt19937()))
-   -- var rng = gsl.gsl_rng_alloc(gsl.gsl_rng__mt19937)
+   var rng : &gsl.gsl_rng = nil
+   [GSL_RNG_INIT(rng)]
    for i=0,N do
       for j=0, thin do
 	 var x,y = 0.0,0.0
@@ -469,7 +476,6 @@ terra doGibbs(p: R.SEXP)
 	 r:set(i+N, y)
       end
    end
-   gsl.gsl_rng_free(rng);
    r:setAttr("dim", R.newInteger(array(N,2),2).sexp)
    return r
 end
