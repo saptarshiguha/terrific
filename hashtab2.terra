@@ -1,3 +1,8 @@
+-- The problem with this hashtable is that it allocated Lua structures for key
+-- i.e. b[...] = {key,value}
+-- which will hit the 1GB limit for LuaJIT ( http://lua-users.org/lists/lua-l/2010-11/msg00251.html)hence we have to move to a c-version
+
+
 C = terralib.includec("stdio.h")
 C1 = terralib.includec("stdlib.h")
 ffi = require("ffi")
@@ -12,6 +17,7 @@ unsigned long djb2hash(const char *str)
 }
 		 ]]
 
+
 terra djb2hash(a : &int8) : uint64
    var hash =  5381ULL
    var c = @a
@@ -22,10 +28,6 @@ terra djb2hash(a : &int8) : uint64
       c = @(a + i)
    end
    return hash
-end
-
-local function ptable(w)
-   for key,value in pairs(w) do print(key,value) end
 end
 
 function makeHash(kType,vType,hashfunction)
@@ -103,7 +105,7 @@ hashIntToComplex = makeHash(int, &ComplexName,function(a) return(tonumber(a)) en
 
 -- CC = terralib.global(ComplexName,{ name = "foo", x = 1.0, y=2.0})
 
-NN=30
+NN=10000000
 terra doAdd()
    var b : hashIntToComplex
    for i=1,NN do
@@ -144,11 +146,11 @@ function testtime()
    print(string.format("elapsed time: %.2f\n", os.clock() - x))
    x = os.clock()
    doGet(b)
-   doIter(b)
+   -- doIter(b)
    print(string.format("elapsed time: %.2f\n", os.clock() - x))
 end
 
-testtime()
+-- testtime()
 
 -- djb2hash:disas()
 -- hashfunctions.djb2hash:disas()
@@ -167,3 +169,38 @@ terra Mos()
    C.printf("Name = %s, Real = %f, Imag=%f\n",c.name, c.x,c.y)
 end
 -- Mos()
+
+
+C = terralib.includec("stdio.h")
+C1 = terralib.includec("stdlib.h")
+ffi = require("ffi")
+
+-- hashIntToComplex = makeHash(int, &ComplexName,function(a) return(tonumber(a)) end)
+local function ptable(w)
+   for key,value in pairs(w) do print(key,value) end
+end
+
+function cncat(a,b)
+   return terralib.cast(rawstring,"foo" .. tonumber(b))
+end
+tcncat = terralib.cast({&int8, int}->{&int8},cncat)
+
+terra testme()
+   var b : hashIntToComplex
+   for i=1,10 do
+      var c : &ComplexName = [&ComplexName](C1.malloc(sizeof(ComplexName)))
+      c.name ,c.x,c.y=tcncat("foo",i),1.0,2.0
+      b:add(i,c)
+   end
+   -- Get Something
+   var d  = b:get(1)
+   C.printf("Name = %s, x=%f, y=%f\n", d.name, d.x,d.y)
+   -- Iterate Over
+   var p =b:makeIter()
+   while p:next() do
+      var v,k = p.value,p.key
+      C.printf("key = %d Name=%s\n",k,v.name)
+   end
+end
+-- testme()
+testtime()

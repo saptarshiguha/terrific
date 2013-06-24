@@ -60,8 +60,7 @@ end
 terra R.rpreservation(x:R.SEXP)
    Rinternals.R_PreserveObject(x)
 end
-terra initialize_terra(it:R.SEXP)
-end
+
 -- Evaluates a string and returns a SEXP
 -- @param q The R query string
 terra R.evalString(q : &int8): R.SEXP
@@ -395,3 +394,40 @@ terra testOne(p:R.SEXP)
 end
 -- testOne:printpretty()
 -- ptable(Rinternals)
+
+function asMatrix(d,type)
+   local s = {sexp = terralib.cast(R.SEXP, d)}
+   local base = Rinternals.REAL(d)
+   local dims = Rinternals.Rf_getAttrib(d,Rinternals.Rf_install("dim"))
+   s.nrows,s.ncols = Rinternals.INTEGER(dims)[0], Rinternals.INTEGER(dims)[1]
+   local t = {
+      __index  = function(tabl, key)
+   	 return(base[ key[1] + key[2]*s.nrows ] )
+      end,
+      __newindex = function(tabl, key, value)
+	 base[  key[1] + key[2]*s.nrows ]  = value
+	 return(value)
+      end
+   }
+   setmetatable(s, t)
+   return(s)
+end
+function MuFunction(d)
+   local s = asMatrix(d,R.types.REALSXP)
+   for i=0, s.nrows-1 do
+      for j=0, s.ncols-1 do
+	 s[{i,j}] = 10
+      end
+   end
+end
+
+terra tMuFunction(p:R.SEXP)
+   var b = R.newReal(p, false)
+   var dims = R.newInteger(b:attr("dim"),false)
+   var nrow, ncols = dims:get(0), dims:get(1)
+   for i=0, nrow do
+      for j=0, ncols do
+	 b:set( i + j*nrow, 10)
+      end
+   end
+end

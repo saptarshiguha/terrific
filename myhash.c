@@ -1,25 +1,26 @@
 #include "myhash.h"
-struct hashT* createNewHashTable(){
-  struct hashT *a = NULL;
-  return a;
-}
 
-void addItem(struct hashT** a, uint64_t key,void* okey,void * ptr){
-  struct hashT *s = malloc(sizeof(struct hashT));
-  s->_key = key;
-  s->_okey = okey;
-  s->_value = ptr;
-  struct hashT *r;
-  HASH_REPLACE(hh, *a, _key, sizeof(uint64_t), s,r);
-}
 
-void* findItem(struct hashT** a, uint64_t key) {
-    struct hashT *s;
-    HASH_FIND(hh, *a, &key, sizeof(uint64_t), s );  /* s: output pointer */
-    return s->_value;
-}
+MAKE_HASH(int,int)
+MAKE_HASH(int8_t,int8)
+MAKE_HASH(int16_t,int16)
+MAKE_HASH(int32_t,int32)
+MAKE_HASH(int64_t,int64)
 
-void deleteItem(struct hashT**a,struct hashT *obj) {
-  HASH_DELETE(hh, *a, obj);  
-}
+MAKE_HASH(uint,uint)
+MAKE_HASH(uint8_t,uint8)
+MAKE_HASH(uint16_t,uint16)
+MAKE_HASH(uint32_t,uint32)
+MAKE_HASH(uint64_t,uint64)
+
+MAKE_HASH(double,double)
+
+
+
+
+
+
+
+
+
 

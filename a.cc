@@ -10,6 +10,19 @@ static lua_State * L;
 _RConstants RConstants;
 extern "C" {
 
+  SEXP doSetN(SEXP a){
+    double* b = REAL(a);
+    SEXP dims = Rf_getAttrib(a,Rf_install("dim"));
+    int nrows = INTEGER(dims)[0];
+    int ncols = INTEGER(dims)[1];
+    for(int i=0; i< nrows;i++){
+      for(int j=0; j<ncols;j++){
+	b[ i+j*nrows] = 10;
+      }
+    }
+    return R_NilValue;
+  }
+	  
   SEXP  doerror(lua_State * L) {
     const char *x = luaL_checkstring(L,-1);
     SEXP s;
