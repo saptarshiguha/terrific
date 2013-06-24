@@ -38,32 +38,73 @@ doTerraFile("/home/sguha/mystuff/programming/terrific/tbase3.t")
 ## a=.Call("doSetN",x)
 ## print(x)
 
+N <- 100
+M <- 100
+iN <- 1:N
+iM <- 1:M
+
+x <- matrix(as.numeric(1:(N*M)),ncol=N)
+invisible(gc())
+system.time(.Call("doSetN",x))
+
+x <- matrix(as.numeric(1:(N*M)),ncol=N)
+invisible(gc())
+system.time(doTerra("MuFunction",x))
+
+x <- matrix(as.numeric(1:(N*M)),ncol=N)
+invisible(gc())
+system.time(doTerra("MuFunction2",x))
+
+
+x <- matrix(as.numeric(1:(N*M)),ncol=N)
+invisible(gc())
+system.time(doTerra("tMuFunction",x))
+
+
 N <- 10000
 M <- 10000
 iN <- 1:N
 iM <- 1:M
 
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-gc()
-system.time(.Call("doSetN",x))
+print("REAL STARTING")
 
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-gc()
-system.time(doTerra("MuFunction",x))
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## ## system.time(.Call("doSetN",x))
 
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-gc()
-system.time(doTerra("tMuFunction",x))
+## print("Terra")
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## ## system.time(doTerra("tMuFunction",x))
 
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-gc()
-system.time({
-  for(i in iN){
-    for(j in iM){
-      x[i,j] <- 0
-    }
-  }
-})
+## print("LuaJIT")
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time(doTerra("MuFunction",x))
+
+## print("LuaJIT (unpretty)")
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time(doTerra("MuFunction2",x))
+
+a <- as.integer(c(50000,1000))
+
+invisible(gc())
+## system.time(x <- .Call("doGibbs",a))
+print(head(x))
+
+invisible(gc())
+system.time(x <- doTerra("doGibbs",a))
+print(head(x))
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time({
+##   for(i in iN){
+##     for(j in iM){
+##       x[i,j] <- 0
+##     }
+##   }
+## })
 
 
 

@@ -12,11 +12,14 @@ Rinternals =  terralib.includecstring [[
   #include <Rinternals.h>
   #include <Rmath.h>
   #include <a.h>
+ #include <gsl/gsl_rng.h>
+ #include <gsl/gsl_randist.h>
   SEXP rexpress(const char* );
   SEXP getGlobalEnv();
   const  char *mychar(SEXP );
   int type(SEXP);
   _RConstants*  getConstants();
+  const gsl_rng_type* get_mt19937();
 ]]
 terralib.linklibrary("/usr/lib/R/lib/libR.so")
 terralib.linklibrary("a.so")
@@ -53,7 +56,7 @@ terra R.Complex:abs()
    return Cmath.sqrt(self.r*self.r+self.i*self.i)
 end
 terra R.unprotector(x:&Rinternals.SEXPREC)
-   Cstdio.printf("Popping Stack\n")
+   -- Cstdio.printf("Popping Stack\n")
    -- Rinternals.Rf_unprotect(1)
    Rinternals.R_ReleaseObject(x)
 end
@@ -175,7 +178,6 @@ local function typedArray(atype)
    terra ArrayT:attr(what: &int8)
       return Rinternals.Rf_getAttrib(self.sexp,Rinternals.Rf_install(what))
    end
-
    return ArrayT
 end
 
@@ -259,6 +261,7 @@ local function typedOtherArray(atype)
    terra ArrayT:set(index:int, value: R.SEXP)
       [pa.accesor](self.sexp, index, [quickly(atype,value)])
    end
+
    terra ArrayT:setAttr( attr:&int8, value :R.SEXP)
       Rinternals.Rf_setAttrib(self.sexp,Rinternals.Rf_install(attr),value)
    end
@@ -395,31 +398,42 @@ end
 -- testOne:printpretty()
 -- ptable(Rinternals)
 
-function asMatrix(d,type)
+function asMatrix(d)
    local s = {sexp = terralib.cast(R.SEXP, d)}
    local base = Rinternals.REAL(d)
-   local dims = Rinternals.Rf_getAttrib(d,Rinternals.Rf_install("dim"))
-   s.nrows,s.ncols = Rinternals.INTEGER(dims)[0], Rinternals.INTEGER(dims)[1]
+   local dims = Rinternals.INTEGER(Rinternals.Rf_getAttrib(d,Rinternals.Rf_install("dim")))
+   s.nrows,s.ncols = dims[0],dims[1]
    local t = {
       __index  = function(tabl, key)
    	 return(base[ key[1] + key[2]*s.nrows ] )
       end,
       __newindex = function(tabl, key, value)
 	 base[  key[1] + key[2]*s.nrows ]  = value
-	 return(value)
       end
    }
    setmetatable(s, t)
    return(s)
 end
 function MuFunction(d)
-   local s = asMatrix(d,R.types.REALSXP)
+   local s = asMatrix(d)
    for i=0, s.nrows-1 do
       for j=0, s.ncols-1 do
-	 s[{i,j}] = 10
+	 s[{i,j}] = 10.0
       end
    end
 end
+
+function MuFunction2(d)
+   local base = Rinternals.REAL(d)
+   local dims = Rinternals.INTEGER(Rinternals.Rf_getAttrib(d,Rinternals.Rf_install("dim")))
+   local nrows,ncols = dims[0],dims[1]
+   for i=0, nrows-1 do
+      for j=0,ncols-1 do
+	 base[i + j*nrows ] = 10.0
+      end
+   end
+end
+
 
 terra tMuFunction(p:R.SEXP)
    var b = R.newReal(p, false)
@@ -427,7 +441,35 @@ terra tMuFunction(p:R.SEXP)
    var nrow, ncols = dims:get(0), dims:get(1)
    for i=0, nrow do
       for j=0, ncols do
-	 b:set( i + j*nrow, 10)
+	 b:set( i + j*nrow, 10.0)
       end
    end
+end
+-- tMuFunction:disas()
+
+gsl = terralib.includecstring [[
+				  #include <gsl/gsl_rng.h>
+                                  #include <gsl/gsl_randist.h>
+                                  const gsl_rng_type *gsl_rng_mt19937;
+			       ]]
+terralib.linklibrary("/usr/lib/libgsl.so")
+
+terra doGibbs(p: R.SEXP)
+   var p1 = R.newInteger(p, false)
+   var N, thin = p1:get(0), p1:get(1)
+   var r = R.newReal(N*2)
+   var rng = gsl.gsl_rng_alloc([&gsl.gsl_rng_type] (Rinternals.get_mt19937()))
+   -- var rng = gsl.gsl_rng_alloc(gsl.gsl_rng__mt19937)
+   for i=0,N do
+      for j=0, thin do
+	 var x,y = 0.0,0.0
+	 x=gsl.gsl_ran_gamma(rng,3.0,1.0/(y*y+4));
+	 y=1.0/(x+1)+gsl.gsl_ran_gaussian(rng,1.0/Cmath.sqrt(2*x+2))
+	 r:set(i, x)
+	 r:set(i+N, y)
+      end
+   end
+   gsl.gsl_rng_free(rng);
+   r:setAttr("dim", R.newInteger(array(N,2),2).sexp)
+   return r
 end
