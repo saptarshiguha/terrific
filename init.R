@@ -49,7 +49,7 @@ system.time(.Call("doSetN",x))
 
 x <- matrix(as.numeric(1:(N*M)),ncol=N)
 invisible(gc())
-system.time(doTerra("MuFunction",x))
+system.time(doTerra("MuFunction3",x))
 
 x <- matrix(as.numeric(1:(N*M)),ncol=N)
 invisible(gc())
@@ -70,32 +70,35 @@ print("REAL STARTING")
 
 ## x <- matrix(as.numeric(1:(N*M)),ncol=N)
 ## invisible(gc())
-## ## system.time(.Call("doSetN",x))
+## system.time(.Call("doSetN",x))
 
 ## print("Terra")
 ## x <- matrix(as.numeric(1:(N*M)),ncol=N)
 ## invisible(gc())
-## ## system.time(doTerra("tMuFunction",x))
+## system.time(doTerra("tMuFunction",x))
 
-## print("LuaJIT")
-## x <- matrix(as.numeric(1:(N*M)),ncol=N)
-## invisible(gc())
-## system.time(doTerra("MuFunction",x))
-
-## print("LuaJIT (unpretty)")
-## x <- matrix(as.numeric(1:(N*M)),ncol=N)
-## invisible(gc())
-## system.time(doTerra("MuFunction2",x))
-
-a <- as.integer(c(50000,1000))
-
+print("LuaJIT-{}")
+x <- matrix(as.numeric(1:(N*M)),ncol=N)
 invisible(gc())
+system.time(doTerra("MuFunction3",x))
+
+
+print("LuaJIT-[]")
+x <- matrix(as.numeric(1:(N*M)),ncol=N)
+invisible(gc())
+system.time(doTerra("MuFunction2",x))
+
+
+
+## a <- as.integer(c(50000,1000))
+
+## invisible(gc())
 ## system.time(x <- .Call("doGibbs",a))
-print(head(x))
+## print(head(x))
 
-invisible(gc())
-system.time(x <- doTerra("doGibbs",a))
-print(head(x))
+## invisible(gc())
+## system.time(x <- doTerra("doGibbs",a))
+## print(head(x))
 ## x <- matrix(as.numeric(1:(N*M)),ncol=N)
 ## invisible(gc())
 ## system.time({

@@ -2,6 +2,8 @@
 require("math")
 local ffi = require("ffi")
 Cstdio = terralib.includec("stdio.h")
+stdlib = terralib.includec("stdlib.h")
+
 Cmath = terralib.includec("math.h")
 local function ptable(w)
    for key,value in pairs(w) do print(key,value) end
@@ -398,30 +400,64 @@ end
 -- testOne:printpretty()
 -- ptable(Rinternals)
 
-function asMatrix(d)
-   local s = {sexp = terralib.cast(R.SEXP, d)}
+
+
+local X = {
+   __index  = function(tabl, key)
+      return(tabl.base[ key[1] + key[2]*tabl.nrows ] )
+   end,
+   __newindex = function(tabl, key, value)
+      tabl.base[ key[1] + key[2]*tabl.nrows ]  = value
+   end
+}
+makeMatrix  = function(d)
    local base = Rinternals.REAL(d)
    local dims = Rinternals.INTEGER(Rinternals.Rf_getAttrib(d,Rinternals.Rf_install("dim")))
-   s.nrows,s.ncols = dims[0],dims[1]
-   local t = {
-      __index  = function(tabl, key)
-   	 return(base[ key[1] + key[2]*s.nrows ] )
-      end,
-      __newindex = function(tabl, key, value)
-	 base[  key[1] + key[2]*s.nrows ]  = value
-      end
-   }
-   setmetatable(s, t)
-   return(s)
+   local Y = { base = base, nrows = dims[0], ncols= dims[1] }
+   setmetatable(Y, X)
+   return(Y)
 end
-function MuFunction(d)
-   local s = asMatrix(d)
+
+ffi.cdef[[
+struct MatrixWrapper {
+  double *base;
+  int nrows;
+  int ncols;
+};
+]]
+
+ffi.metatype("struct MatrixWrapper", {
+		__index =  function(tabl, key)
+		   return(tabl.base[ key[1] + key[2]*tabl.nrows ] )
+		end,
+		__newindex =  function(tabl, key, value)
+		   tabl.base[ key[1] + key[2]*tabl.nrows ]  = value
+		end,
+				     })
+makeMatrix2 = function(d)
+   local dims = Rinternals.INTEGER(Rinternals.Rf_getAttrib(d,Rinternals.Rf_install("dim")))
+   local s =  ffi.new("struct MatrixWrapper",  Rinternals.REAL(d),dims[0],dims[1])
+   return s
+end
+
+function  MuFunction3(d)
+   local s = makeMatrix2(d)
    for i=0, s.nrows-1 do
       for j=0, s.ncols-1 do
 	 s[{i,j}] = 10.0
       end
-   end
+   end   
 end
+
+function  MuFunction4(d)
+   local s =makeMatrix(d)
+   for i=0, s.nrows-1 do
+      for j=0, s.ncols-1 do
+	 s[{i,j}] = 10.0
+      end
+   end   
+end
+   
 
 function MuFunction2(d)
    local base = Rinternals.REAL(d)
