@@ -61,8 +61,8 @@ invisible(gc())
 system.time(doTerra("tMuFunction",x))
 
 
-N <- 10000
-M <- 10000
+N <- 1000
+M <- 1000
 iN <- 1:N
 iM <- 1:M
 

@@ -418,15 +418,13 @@ makeMatrix  = function(d)
    return(Y)
 end
 
-ffi.cdef[[
 struct MatrixWrapper {
-  double *base;
-  int nrows;
-  int ncols;
-};
-]]
+       base : &double;
+       nrows :int;
+       ncols :int;
+}
 
-ffi.metatype("struct MatrixWrapper", {
+ffi.metatype(MatrixWrapper:cstring(), {
 		__index =  function(tabl, key)
 		   return(tabl.base[ key[1] + key[2]*tabl.nrows ] )
 		end,
@@ -436,7 +434,7 @@ ffi.metatype("struct MatrixWrapper", {
 				     })
 makeMatrix2 = function(d)
    local dims = Rinternals.INTEGER(Rinternals.Rf_getAttrib(d,Rinternals.Rf_install("dim")))
-   local s =  ffi.new("struct MatrixWrapper",  Rinternals.REAL(d),dims[0],dims[1])
+   local s =  terralib.new(MatrixWrapper,  Rinternals.REAL(d),dims[0],dims[1])
    return s
 end
 
