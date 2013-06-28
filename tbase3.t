@@ -439,6 +439,7 @@ makeMatrix2 = function(d)
 end
 
 function  MuFunction3(d)
+   -- near native speed
    local s = makeMatrix2(d)
    for i=0, s.nrows-1 do
       for j=0, s.ncols-1 do
@@ -448,6 +449,7 @@ function  MuFunction3(d)
 end
 
 function  MuFunction4(d)
+   -- slow
    local s =makeMatrix(d)
    for i=0, s.nrows-1 do
       for j=0, s.ncols-1 do
@@ -458,6 +460,7 @@ end
    
 
 function MuFunction2(d)
+   -- no fancy access, but same MuFunction 3
    local base = Rinternals.REAL(d)
    local dims = Rinternals.INTEGER(Rinternals.Rf_getAttrib(d,Rinternals.Rf_install("dim")))
    local nrows,ncols = dims[0],dims[1]
@@ -495,10 +498,15 @@ GSL_RNG_INIT = function(rng)
       end)
 end
 
+terra R.asMatrix(a:R.RealVector, r:int,c:int)
+   a:setAttr("dim", R.newInteger(array(r,c),2).sexp)
+   return(a)
+end
+
 terra doGibbs(p: R.SEXP)
    var p1 = R.newInteger(p, false)
    var N, thin = p1:get(0), p1:get(1)
-   var r = R.newReal(N*2)
+   var r = R.asMatrix(R.newReal(N*2),N,2)
    var rng : &gsl.gsl_rng = nil
    [GSL_RNG_INIT(rng)]
    for i=0,N do
@@ -510,6 +518,24 @@ terra doGibbs(p: R.SEXP)
 	 r:set(i+N, y)
       end
    end
-   r:setAttr("dim", R.newInteger(array(N,2),2).sexp)
    return r
 end
+
+
+
+require 'qtcore'
+require 'qtgui'
+
+function doTest(x)
+   local app = QApplication.new(2, {'lua','-nograb'})
+   local w = QWidget.new()
+   function w:closeEvent(e)
+      print('Closing!')
+   end
+   w:show()
+   app.exec()
+   print("HELLEOE")
+   return nil
+end
+
+   

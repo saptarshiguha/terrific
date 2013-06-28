@@ -122,7 +122,7 @@ extern "C" {
     if (status && !lua_isnil(L, -1)) {
       const char *msg = lua_tostring(L, -1);
       if (msg == NULL) msg = "(error object is not a string)";
-      l_message("SAPSI", msg);
+      l_message("Terrific Error: ", msg);
       lua_pop(L, 1);
     }
     return status;
@@ -169,6 +169,13 @@ extern "C" {
     }else Rf_error("Error in computing function:%s",STRING_ELT(_n,0));
     return(R_NilValue);
   }
+
+  SEXP doTerraFunc0(SEXP _n, SEXP s1){
+    lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(_n,0)));
+    lua_pushlightuserdata(L, s1);
+    return(carryOn(_n,0));
+  }
+
   SEXP doTerraFunc1(SEXP _n, SEXP s1){
     lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(_n,0)));
     lua_pushlightuserdata(L, s1);

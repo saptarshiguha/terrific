@@ -12,7 +12,7 @@ doTerraFile <- function(p){
 }
 doTerra <- function(f,...){
   l <- list(...)
-  .Call(fns[length(l)],f,...)
+  .Call(fns[[length(l)]],f,...)
 }
 
 mySocialClub <- function(n) cat(sprintf("the number you called is %s",n))
@@ -38,35 +38,35 @@ doTerraFile("/home/sguha/mystuff/programming/terrific/tbase3.t")
 ## a=.Call("doSetN",x)
 ## print(x)
 
-N <- 100
-M <- 100
-iN <- 1:N
-iM <- 1:M
+## N <- 100
+## M <- 100
+## iN <- 1:N
+## iM <- 1:M
 
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-invisible(gc())
-system.time(.Call("doSetN",x))
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time(.Call("doSetN",x))
 
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-invisible(gc())
-system.time(doTerra("MuFunction3",x))
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time(doTerra("MuFunction3",x))
 
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-invisible(gc())
-system.time(doTerra("MuFunction2",x))
-
-
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-invisible(gc())
-system.time(doTerra("tMuFunction",x))
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time(doTerra("MuFunction2",x))
 
 
-N <- 1000
-M <- 1000
-iN <- 1:N
-iM <- 1:M
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time(doTerra("tMuFunction",x))
 
-print("REAL STARTING")
+
+## N <- 1000
+## M <- 1000
+## iN <- 1:N
+## iM <- 1:M
+
+## print("REAL STARTING")
 
 ## x <- matrix(as.numeric(1:(N*M)),ncol=N)
 ## invisible(gc())
@@ -77,27 +77,27 @@ print("REAL STARTING")
 ## invisible(gc())
 ## system.time(doTerra("tMuFunction",x))
 
-print("LuaJIT-{}")
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-invisible(gc())
-system.time(doTerra("MuFunction3",x))
+## print("LuaJIT-{}")
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time(doTerra("MuFunction3",x))
 
 
-print("LuaJIT-[]")
-x <- matrix(as.numeric(1:(N*M)),ncol=N)
-invisible(gc())
-system.time(doTerra("MuFunction2",x))
+## print("LuaJIT-[]")
+## x <- matrix(as.numeric(1:(N*M)),ncol=N)
+## invisible(gc())
+## system.time(doTerra("MuFunction2",x))
 
 
 
-## a <- as.integer(c(50000,1000))
+a <- as.integer(c(50000,1000))
 
 ## invisible(gc())
 ## system.time(x <- .Call("doGibbs",a))
 ## print(head(x))
 
 ## invisible(gc())
-## system.time(x <- doTerra("doGibbs",a))
+## system.time(x <- .Call("doTerraFunc1","doGibbs",a))
 ## print(head(x))
 ## x <- matrix(as.numeric(1:(N*M)),ncol=N)
 ## invisible(gc())
@@ -111,3 +111,4 @@ system.time(doTerra("MuFunction2",x))
 
 
 
+.Call("doTerraFunc1","doTest",1)
