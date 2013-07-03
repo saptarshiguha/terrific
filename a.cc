@@ -8,10 +8,24 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include "a.h"
+#include <QtCore/QCoreApplication>
+
 static lua_State * L;
 _RConstants RConstants;
+
+
+void goo_(){
+  printf("Processing QT Events\n");
+  QCoreApplication::processEvents();
+
+}
+
 extern "C" {
 
+  SEXP goo(SEXP a){
+    goo_();
+      return R_NilValue;
+  }
   SEXP doSetN(SEXP a){
     double* b = REAL(a);
     SEXP dims = Rf_getAttrib(a,Rf_install("dim"));
@@ -166,7 +180,7 @@ extern "C" {
 	lua_pop(L,1);
 	return(a);
       }
-    }else Rf_error("Error in computing function:%s",STRING_ELT(_n,0));
+    }else Rf_error("Terrfic Error in computing function:%s",STRING_ELT(_n,0));
     return(R_NilValue);
   }
 

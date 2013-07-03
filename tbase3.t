@@ -538,4 +538,52 @@ function doTest(x)
    return nil
 end
 
-   
+function processQTEvents(x)
+   print("Processing Events")
+   QCoreApplication.processEvents()
+   return nil
+end
+
+mu = {}
+function doTest2(x)
+   mu.App = QApplication(1, {"Test"})
+   mu.Btn = QPushButton("Quit!")
+   local running  = true
+   mu.Btn:show()
+   mu.Btn:connect('2clicked()',
+		  function()
+		     print("BYeeee")
+		     -- can yet quit application
+		     mu.Btn.close()
+	       end)
+   return mu
+end
+
+function ParamSum(n)
+   return terra(input : R.SEXP)
+      var dbl = R.newReal(input,false)
+      var N = dbl.length
+      var input = dbl.ptr
+      var acc : vector(double,n)
+      var accp = &acc
+      for i=0,n do
+      	 @(accp+i)  = 0.0
+      end
+      for i = 0,N,n do
+      	 var entry = @[&vector(double,n)](input + i)
+      	 acc = acc + entry -- this is a vector add
+      end
+      var s:double = 0.0
+      for i = 0, n do
+      	 s = s+ acc[i]
+      end
+      return R.newScalarReal(s)
+   end
+end
+
+sum2 = ParamSum(2)
+sum4 = ParamSum(4)
+sum8 = ParamSum(8)
+sum16 = ParamSum(16)
+sum2:disas()
+sum4:disas()

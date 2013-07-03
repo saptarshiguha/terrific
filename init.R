@@ -90,7 +90,7 @@ doTerraFile("/home/sguha/mystuff/programming/terrific/tbase3.t")
 
 
 
-a <- as.integer(c(50000,1000))
+## a <- as.integer(c(50000,1000))
 
 ## invisible(gc())
 ## system.time(x <- .Call("doGibbs",a))
@@ -111,4 +111,28 @@ a <- as.integer(c(50000,1000))
 
 
 
-.Call("doTerraFunc1","doTest",1)
+## a <- doTerra("doTest2",NULL)
+## i <- 0
+## while(i<5){
+##   doTerra("processQTEvents",NULL)
+##   i <- i+1
+##   Sys.sleep(5)
+## }
+
+x <- runif(16*10e6)
+
+print("Burn In")
+print(system.time(sum(x)))
+doTerra("sum4",x)
+.Call("doTerraFunc1","sum2",x)
+.Call("doTerraFunc1","sum8",x)
+.Call("doTerraFunc1","sum16",x)
+
+print("RUNNING")
+print( system.time(.Call("doTerraFunc1","sum2",x)))
+print( system.time(.Call("doTerraFunc1","sum4",x)))
+print( system.time(.Call("doTerraFunc1","sum8",x)))
+print( system.time(.Call("doTerraFunc1","sum16",x)))
+
+print(system.time(sum(x)))
+
