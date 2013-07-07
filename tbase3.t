@@ -3,28 +3,32 @@ require("math")
 local ffi = require("ffi")
 Cstdio = terralib.includec("stdio.h")
 stdlib = terralib.includec("stdlib.h")
+unistd = terralib.includec("unistd.h")
 
 Cmath = terralib.includec("math.h")
 local function ptable(w)
    for key,value in pairs(w) do print(key,value) end
 end
-
+  -- #include <Rinternals.h>
+  -- #include <R_ext/eventloop.h>
+  -- #include <Rmath.h>
 
 Rinternals =  terralib.includecstring [[
-  #include <Rinternals.h>
-  #include <Rmath.h>
+
   #include <a.h>
- #include <gsl/gsl_rng.h>
- #include <gsl/gsl_randist.h>
-  SEXP rexpress(const char* );
-  SEXP getGlobalEnv();
-  const  char *mychar(SEXP );
-  int type(SEXP);
-  _RConstants*  getConstants();
+  #include <gsl/gsl_rng.h>
+  #include <gsl/gsl_randist.h>
   const gsl_rng_type* get_mt19937();
+SEXP rexpress(const char* );
+SEXP getGlobalEnv();
+const  char *mychar(SEXP );
+int type(SEXP);
+_RConstants*  getConstants();
+void setCStackLimit(int a);
 ]]
 terralib.linklibrary("/usr/lib/R/lib/libR.so")
 terralib.linklibrary("a.so")
+
 
 
 R = {}
@@ -521,6 +525,35 @@ terra doGibbs(p: R.SEXP)
    return r
 end
 
+-- GLIB MULTITHREADING
+terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+glib = terralib.includec("glib-2.0/glib.h")
+terralib.linklibrary("libglib-2.0.so")
+terralib.linklibrary("libgthread-2.0.so")
+terralib.linklibrary("librt.so")
+
+
+terra afunc(data: glib.gpointer, userdata: glib.gpointer) :{}
+   var a = [&int](data)
+   Cstdio.printf("Received %d, sleeping\t", @a)
+   unistd.sleep(5)
+   Cstdio.printf("%d is done sleeping\n", @a)
+end
+
+terra startpool(a :R.SEXP)
+   var N = R.newInteger(a,false):get(0)
+   var threadpool = glib.g_thread_pool_new(afunc,nil,10,0,nil)
+   var integers = [&int](stdlib.malloc(sizeof(int)*N))
+   for i=1,N do
+      integers[i]=i
+      glib.g_thread_pool_push (threadpool,integers+i,nil)
+   end
+   glib.g_thread_pool_free (threadpool,0,1)
+end
+
+terra fooev(a:R.SEXP)
+   Cstdio.printf("%p\n",R.constants.InputHandlers)
+end
 
 
 require 'qtcore'
@@ -538,15 +571,55 @@ function doTest(x)
    return nil
 end
 
+
+ifd = global(int)
+ofd = global(int)
+fired=global(int,0)
+g = global(&glib.GThread )
+edh = global(&Rinternals.InputHandler)
+mu = {}
 function processQTEvents(x)
-   print("Processing Events")
    QCoreApplication.processEvents()
+end
+terra QTEventLoopHandler(data : &uint8)
+   var buf : uint8[16]
+   unistd.read(ifd,buf,16)
+   processQTEvents()
+   fired=0
+end
+terra mywriter(data:glib.gpointer):glib.gpointer
+   var buf : uint8[16];
+   while true do
+      unistd.usleep(10000)
+      if fired == 0 then
+	 fired = 1
+	 buf[0]=0;
+	 var s = unistd.write(ofd, buf, 1);
+      end
+   end
    return nil
 end
+terra startGThreads()
+   glib.g_thread_init (nil)
+   g = glib.g_thread_create (mywriter,nil,0,nil)
+end
+terra QTEventLoopInit()
+   var fds : int[2]
+   if unistd.pipe(fds) == 0  then
+      ifd,ofd = fds[0],fds[1]
+      edh = Rinternals.addInputHandler(R.constants.InputHandlers,ifd,QTEventLoopHandler,31)
+      Rinternals.setCStackLimit(-1)
+      startGThreads()
+      Cstdio.printf("Started Eventloop on %p\n",edh)
+   end
 
-mu = {}
+end
+
+function qtinit(a)
+   mu.App = QApplication(1, {"qtbase", "-nograb"})
+   QTEventLoopInit()
+end
 function doTest2(x)
-   mu.App = QApplication(1, {"Test"})
    mu.Btn = QPushButton("Quit!")
    local running  = true
    mu.Btn:show()
@@ -554,14 +627,14 @@ function doTest2(x)
 		  function()
 		     print("BYeeee")
 		     -- can yet quit application
-		     mu.Btn.close()
+		     mu.Btn:close()
 	       end)
-   return mu
+   return nil
 end
 
 function ParamSum(n)
-   return terra(input : R.SEXP)
-      var dbl = R.newReal(input,false)
+   return terra(input0 : R.SEXP)
+      var dbl = R.newReal(input0,false)
       var N = dbl.length
       var input = dbl.ptr
       var acc : vector(double,n)
@@ -581,9 +654,31 @@ function ParamSum(n)
    end
 end
 
+
+terra sum(input0 :R.SEXP)
+   var dbl = R.newReal(input0,false)
+   var N = dbl.length
+   var input = dbl.ptr
+   var acc : vector(double,4) = vector(0.0,0.0,0.0,0.0)
+   for i = 0,N,4 do
+      var entry = @[&vector(double,4)](input + i)
+      acc = acc + entry -- this is a vector add
+   end
+   return R.newScalarReal(acc[0] + acc[1] + acc[2] + acc[3])
+end
+
+terra sumzd(input : &float, N : int)
+   var acc : vector(float,4) = vector(0.f,0.f,0.f,0.f)
+   for i = 0,N,4 do
+      --cast the floats to float4s and load
+      var entry = @[&vector(float,4)](input + i)
+      acc = acc + entry -- this is a vector add
+   end
+   return acc[0] + acc[1] + acc[2] + acc[3]
+end
 sum2 = ParamSum(2)
 sum4 = ParamSum(4)
 sum8 = ParamSum(8)
 sum16 = ParamSum(16)
-sum2:disas()
-sum4:disas()
+sum32 = ParamSum(32)
+

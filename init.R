@@ -2,7 +2,7 @@ fns <- sapply(1:5,function(a) sprintf("doTerraFunc%s",a))
 
 init <- function(){
   ## Sys.setenv(INCLUDE_PATH=strsplit(system("R CMD config --cppflags",intern=TRUE),"-I")[[1]][[2]])
-  Sys.setenv(INCLUDE_PATH="/usr/share/R/include;/usr/share/R/include/R_ext;./")
+  Sys.setenv(INCLUDE_PATH="/usr/share/R/include;/usr/share/R/include/R_ext;./;")
   dyn.load("a.so")
   .Call("initTerrific",NULL)
 }
@@ -110,29 +110,42 @@ doTerraFile("/home/sguha/mystuff/programming/terrific/tbase3.t")
 ## })
 
 
+doTerra("qtinit",NULL)
+a <- doTerra("doTest2",NULL)
 
-## a <- doTerra("doTest2",NULL)
 ## i <- 0
-## while(i<5){
+## while(TRUE){
 ##   doTerra("processQTEvents",NULL)
 ##   i <- i+1
-##   Sys.sleep(5)
+##   Sys.sleep(1)
 ## }
 
-x <- runif(16*10e6)
+## x <- runif(8e6)
 
-print("Burn In")
-print(system.time(sum(x)))
-doTerra("sum4",x)
-.Call("doTerraFunc1","sum2",x)
-.Call("doTerraFunc1","sum8",x)
-.Call("doTerraFunc1","sum16",x)
+## print("Burn In")
+## print(system.time(sum(x)))
+## doTerra("sum4",x)
+## .Call("doTerraFunc1","sum2",x)
+## .Call("doTerraFunc1","sum8",x)
+## .Call("doTerraFunc1","sum16",x)
 
-print("RUNNING")
-print( system.time(.Call("doTerraFunc1","sum2",x)))
-print( system.time(.Call("doTerraFunc1","sum4",x)))
-print( system.time(.Call("doTerraFunc1","sum8",x)))
-print( system.time(.Call("doTerraFunc1","sum16",x)))
+## x <- runif(16*20e6)
 
-print(system.time(sum(x)))
+## print("RUNNING")
+## System.time <- function(...){
+##   invisible(gc())
+##   system.time(...)
+## }
 
+## cat("C Sum\n")
+## print(System.time(.Call("doCSum",x)))
+## ## print(System.time(sum(x)))
+## cat("2 Sum\n")
+## print( System.time(.Call("doTerraFunc1","sum2",x)))
+## print( System.time(.Call("doTerraFunc1","sum4",x)))
+## print( System.time(.Call("doTerraFunc1","sum8",x)))
+## print( System.time(.Call("doTerraFunc1","sum16",x)))
+## print( System.time(.Call("doTerraFunc1","sum",x)))
+## system.time(doTerra("startpool",as.integer(10)))
+
+## doTerra("fooev",NULL)

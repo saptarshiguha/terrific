@@ -3,6 +3,9 @@
 
 #include <R.h>
 #include <Rinternals.h>
+#include <R_ext/eventloop.h>
+#include <Rmath.h>
+
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
@@ -22,6 +25,7 @@ typedef struct  {
   SEXP GlobalEnv;
   SEXP EmptyEnv;
   SEXP BaseEnv;
+  InputHandler *InputHandlers;
 } _RConstants;
 
 

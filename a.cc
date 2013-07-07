@@ -9,9 +9,10 @@
 #include <gsl/gsl_randist.h>
 #include "a.h"
 #include <QtCore/QCoreApplication>
-
+#include <stdint.h>
 static lua_State * L;
 _RConstants RConstants;
+extern uintptr_t R_CStackLimit;
 
 
 void goo_(){
@@ -21,7 +22,9 @@ void goo_(){
 }
 
 extern "C" {
-
+  void setCStackLimit(int a){
+    R_CStackLimit = a;
+  }
   SEXP goo(SEXP a){
     goo_();
       return R_NilValue;
@@ -37,6 +40,17 @@ extern "C" {
       }
     }
     return R_NilValue;
+  }
+  SEXP doCSum(SEXP a){
+    double* d =REAL(a);
+    double s=0;
+    int j = LENGTH(a);
+    for(int i=0;i<j;i++) s=s+d[i];
+    SEXP r = Rf_allocVector(REALSXP,1);
+    PROTECT(r);
+    REAL(r)[0] = s;
+    UNPROTECT(1);
+    return(r);
   }
 
   const gsl_rng_type* get_mt19937(){
@@ -279,6 +293,7 @@ extern "C" {
     RConstants.GlobalEnv = R_GlobalEnv;
     RConstants.EmptyEnv = R_EmptyEnv;
     RConstants.BaseEnv = R_BaseEnv;
+    RConstants.InputHandlers = R_InputHandlers;
     return &RConstants;
   }
 }

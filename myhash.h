@@ -36,10 +36,10 @@ PRIMITIVE_STRUCT(uint64_t,uint64)
 PRIMITIVE_STRUCT(double,double)
 
 #define MAKE_HASH(NAME,TN)					\
-  struct mhash ##TN * createNewHashTable_ ##TN(){			\
-    struct mhash ##TN *a = NULL;				\
-      return a;							\
-  }								\
+  struct mhash ##TN * createNewHashTable_ ##TN(){		\
+    struct mhash ##TN *a = NULL;					\
+      return a;								\
+  }									\
   struct mhash ##TN* addItem_ ##TN(struct mhash ##TN** a, NAME key,void * ptr){	\
     struct mhash ##TN *s = malloc(sizeof(struct mhash ##TN));		\
       s->key = key;							\
