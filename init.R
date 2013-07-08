@@ -110,8 +110,8 @@ doTerraFile("/home/sguha/mystuff/programming/terrific/tbase3.t")
 ## })
 
 
-doTerra("qtinit",NULL)
-a <- doTerra("doTest2",NULL)
+## doTerra("qtinit",NULL)
+## a <- doTerra("doTest2",NULL)
 
 ## i <- 0
 ## while(TRUE){

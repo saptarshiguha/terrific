@@ -1,0 +1,65 @@
+--  export INCLUDE_PATH="/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+--  via pkg-config --cflags glib-2.0
+
+
+stdio  = terralib.includec("stdio.h")
+stdlib = terralib.includec("stdlib.h")
+glib = terralib.includec("glib-2.0/glib.h")
+terralib.linklibrary("libglib-2.0.so")
+
+
+terra hash(a : &uint8,b:int32) : uint32
+   var hash =  5381UL
+   for i=0, b do   
+      hash = (( hash << 5)+hash) + a[i]
+   end
+   return hash
+end
+
+
+local function ptable(w)   for key,value in pairs(w) do print(key,value) end end
+
+struct Pair {
+   x:int;
+   y:int;
+	    }
+
+-- ptable(glib)
+terra myhashfunc(v : glib.gconstpointer )
+   return hash(v, sizeof(Pair))
+end
+
+terra myhasheq(v : glib.gconstpointer,w:glib.gconstpointer )
+   var vp,wp = [&Pair]( v),[&Pair]( w)
+   if (vp.x == wp.x and vp.y==wp.y) then return 1 else return 0 end
+end
+
+terra hashdestructor(v: glib.gconstpointer)
+   stdio.printf("Destroying %p\n", v)
+end
+
+terra foo()
+   var myhash = glib.g_hash_table_new_full(myhashfunc, myhasheq,hashdestructor,nil)
+   var b : Pair = { 10,12}
+   var b1 : Pair = { 10,12}
+
+   var n  = 10
+   glib.g_hash_table_insert(myhash,&b, &n)
+   var c = glib.g_hash_table_lookup(myhash, &b)
+   stdio.printf("The capital of sapsi %p is %d \n replacing\n",&b,@c)
+   glib.g_hash_table_insert(myhash,&b1, &n)
+
+   c = glib.g_hash_table_lookup(myhash, &b1)
+   stdio.printf("The capital of sapsi %p is %d \n",&b1,@c)
+   return myhash
+end
+x=foo()
+
+terra check(hash: &glib.GHashTable)
+   var b : Pair = { 10,12}
+   stdio.printf("There are %d keys in the hash\n", glib.g_hash_table_size(hash));
+   var c = glib.g_hash_table_lookup(hash, &b)
+   stdio.printf("The capital of sapsi is %p\n", c)
+end
+-- x=foo()
+check(x)

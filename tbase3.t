@@ -6,13 +6,7 @@ stdlib = terralib.includec("stdlib.h")
 unistd = terralib.includec("unistd.h")
 
 Cmath = terralib.includec("math.h")
-local function ptable(w)
-   for key,value in pairs(w) do print(key,value) end
-end
-  -- #include <Rinternals.h>
-  -- #include <R_ext/eventloop.h>
-  -- #include <Rmath.h>
-
+local function ptable(w)   for key,value in pairs(w) do print(key,value) end end
 Rinternals =  terralib.includecstring [[
 
   #include <a.h>
@@ -422,6 +416,7 @@ makeMatrix  = function(d)
    return(Y)
 end
 
+MatrixWrapper = nil
 struct MatrixWrapper {
        base : &double;
        nrows :int;
@@ -525,7 +520,7 @@ terra doGibbs(p: R.SEXP)
    return r
 end
 
--- GLIB MULTITHREADING
+-- -- GLIB MULTITHREADING
 terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include"
 glib = terralib.includec("glib-2.0/glib.h")
 terralib.linklibrary("libglib-2.0.so")
@@ -551,86 +546,7 @@ terra startpool(a :R.SEXP)
    glib.g_thread_pool_free (threadpool,0,1)
 end
 
-terra fooev(a:R.SEXP)
-   Cstdio.printf("%p\n",R.constants.InputHandlers)
-end
 
-
-require 'qtcore'
-require 'qtgui'
-
-function doTest(x)
-   local app = QApplication.new(2, {'lua','-nograb'})
-   local w = QWidget.new()
-   function w:closeEvent(e)
-      print('Closing!')
-   end
-   w:show()
-   app.exec()
-   print("HELLEOE")
-   return nil
-end
-
-
-ifd = global(int)
-ofd = global(int)
-fired=global(int,0)
-g = global(&glib.GThread )
-edh = global(&Rinternals.InputHandler)
-mu = {}
-function processQTEvents(x)
-   QCoreApplication.processEvents()
-end
-terra QTEventLoopHandler(data : &uint8)
-   var buf : uint8[16]
-   unistd.read(ifd,buf,16)
-   processQTEvents()
-   fired=0
-end
-terra mywriter(data:glib.gpointer):glib.gpointer
-   var buf : uint8[16];
-   while true do
-      unistd.usleep(10000)
-      if fired == 0 then
-	 fired = 1
-	 buf[0]=0;
-	 var s = unistd.write(ofd, buf, 1);
-      end
-   end
-   return nil
-end
-terra startGThreads()
-   glib.g_thread_init (nil)
-   g = glib.g_thread_create (mywriter,nil,0,nil)
-end
-terra QTEventLoopInit()
-   var fds : int[2]
-   if unistd.pipe(fds) == 0  then
-      ifd,ofd = fds[0],fds[1]
-      edh = Rinternals.addInputHandler(R.constants.InputHandlers,ifd,QTEventLoopHandler,31)
-      Rinternals.setCStackLimit(-1)
-      startGThreads()
-      Cstdio.printf("Started Eventloop on %p\n",edh)
-   end
-
-end
-
-function qtinit(a)
-   mu.App = QApplication(1, {"qtbase", "-nograb"})
-   QTEventLoopInit()
-end
-function doTest2(x)
-   mu.Btn = QPushButton("Quit!")
-   local running  = true
-   mu.Btn:show()
-   mu.Btn:connect('2clicked()',
-		  function()
-		     print("BYeeee")
-		     -- can yet quit application
-		     mu.Btn:close()
-	       end)
-   return nil
-end
 
 function ParamSum(n)
    return terra(input0 : R.SEXP)

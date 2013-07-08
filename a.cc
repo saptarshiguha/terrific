@@ -8,26 +8,15 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include "a.h"
-#include <QtCore/QCoreApplication>
 #include <stdint.h>
 static lua_State * L;
 _RConstants RConstants;
 extern uintptr_t R_CStackLimit;
 
 
-void goo_(){
-  printf("Processing QT Events\n");
-  QCoreApplication::processEvents();
-
-}
-
 extern "C" {
   void setCStackLimit(int a){
     R_CStackLimit = a;
-  }
-  SEXP goo(SEXP a){
-    goo_();
-      return R_NilValue;
   }
   SEXP doSetN(SEXP a){
     double* b = REAL(a);
