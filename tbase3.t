@@ -378,6 +378,17 @@ local getNamespace = R.makeRFunction("getNamespace",nil,1)
 R.getNamespace  = terra(name : &int8)
    return getNamespace(R.newScalarString(name).sexp)
 end
+terra R.makeXtnlPtr(data : &uint8, finalizer: R.SEXP -> {} ,info: R.SEXP)
+   var a = Rinternals.R_MakeExternalPtr(data,R.constants.NilValue,info)
+   Rinternals.Rf_Protect(a)
+   Rinternals.R_RegisterCFinalizerEx(a, finalizer, 1);
+   Rinternals.Rf_Unprotect(1)
+   return a
+end
+terra R.makeXtnlPtr(data : &uint8, finalizer: R.SEXP -> {})
+   return R.makeXtnlPtr(data, finalizer, nil)
+end
+R.XtnlPtr = R.R_ExternalPtrAddr
 
 
 -- runif = R.makeRFunction("runif","stats",3)

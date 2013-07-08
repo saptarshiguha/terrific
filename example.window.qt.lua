@@ -45,7 +45,6 @@ function doTest1(x)
    mu.window = createWindow(printstring)
    mu.window:initialize()
    mu.window:show()
-   
 end
 
 function doTest2(x)
