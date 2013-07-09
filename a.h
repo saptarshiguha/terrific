@@ -25,6 +25,7 @@ typedef struct  {
   SEXP GlobalEnv;
   SEXP EmptyEnv;
   SEXP BaseEnv;
+  SEXP UnboundValue;
   InputHandler *InputHandlers;
 } _RConstants;
 

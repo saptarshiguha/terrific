@@ -283,6 +283,7 @@ extern "C" {
     RConstants.EmptyEnv = R_EmptyEnv;
     RConstants.BaseEnv = R_BaseEnv;
     RConstants.InputHandlers = R_InputHandlers;
+    RConstants.UnboundValue  = R_UnboundValue ;
     return &RConstants;
   }
 }

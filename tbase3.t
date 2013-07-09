@@ -374,6 +374,20 @@ end
 terra R.defineVariable(name :&int8, value:R.SEXP)
    Rinternals.Rf_defineVar(Rinternals.Rf_install(name),value,R.constants.GlobalEnv)
 end
+terra R.findVariable(name :&int8,env : R.SEXP)
+   SEXP res = Rinternals.Rf_findVar( Rinternals.Rf_install(name),env)
+   if  res == R.constants.UnboundValue then
+      return nil
+   end
+   if R.type(res) = R.types.PROMSXP then
+      res = Rinternals.Rf_eval(res, env)
+   end
+   return res
+end
+terra R.findVariable(name :&int8)
+   return R.findvariable(name, R.constants.GlobalEnv)
+end
+
 local getNamespace = R.makeRFunction("getNamespace",nil,1)
 R.getNamespace  = terra(name : &int8)
    return getNamespace(R.newScalarString(name).sexp)
@@ -389,6 +403,7 @@ terra R.makeXtnlPtr(data : &uint8, finalizer: R.SEXP -> {})
    return R.makeXtnlPtr(data, finalizer, nil)
 end
 R.XtnlPtr = R.R_ExternalPtrAddr
+
 
 
 -- runif = R.makeRFunction("runif","stats",3)

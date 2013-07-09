@@ -55,7 +55,7 @@ function doTest2(x)
 		     print("BYeeee\n")
 		     mu.Btn:close()
 	       end)
-   return nil
+   return n
 end
 
 
