@@ -102,26 +102,31 @@ terra R.findVariable(name :&int8)
 end
 
 -- Wrappers around the above to make this now Lua-esque
-local  NameSpace = {}
-function asEnvironment(envvar)
-   envvar = envvar or R.constants.GlobalEnv
-   local ns = {__environment = envvar }
-   setmetatable(ns, NameSpace)
-   return ns
-end
-
-NameSpace.__index = function(table,key)
-   return R.findVariable(key,rawget(table,"__environment"))
-end
-
-NameSpace.__newindex = function(table,key,value)
-   return R.defineVariable(key,value,rawget(table,"__environment"))
-end
-
+asEnvironment = nil
+struct asEnvironment
+{
+   __env : R.SEXP;
+}
+local emt =  {
+   __index =  function(tabl, key)
+      return(R.findVariable(key,tabl.__env))
+   end,
+   __newindex =  function(tabl, key, value)
+      R.defineVariable(key,value,tabl.__env)
+   end,
+   __new = function(ct,p)
+      if p == nil then
+	 return terralib.new(asEnvironment,R.constants.GlobalEnv)
+      else
+	  return terralib.new(asEnvironment, p)
+      end
+   end
+}
+R.asEnvironment = ffi.metatype(asEnvironment:cstring(),emt)
 
 function testNameSpace(p)
-   local myNS = asEnvironment(p)
-   local globalenv = asEnvironment()
+   local myNS = R.asEnvironment(p)
+   local globalenv = R.asEnvironment()
    print("Inside terra")
    R.print(globalenv["foo"])
    myNS["foo"] = Rbase.Rf_ScalarString(Rbase.Rf_mkChar("alpha"))
