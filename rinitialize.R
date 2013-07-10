@@ -39,10 +39,18 @@ doTerraFile(normalizePath("./typesandfunctions.t"))
 
 
 ## Example Tests
-myNS = new.env()
-myNS$foo = 1.234
-foo=2.45
-doTerra("testNameSpace",myNS)
-print(list(myNS$foo, foo))
+doTerraFile(normalizePath("./tests.t"))
 
+## Environment Test
+## myNS = new.env()
+## myNS$foo = 1.234
+## foo=2.45
+## doTerra("testNameSpace",myNS)
+## print(list(myNS$foo, foo))
+
+
+## IntegerVector Test
+a1 <- doTerra("makeIntegerVector")
+cat("intvector\n")
+print(a1)
 

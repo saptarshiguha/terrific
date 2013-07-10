@@ -102,7 +102,7 @@ terra R.findVariable(name :&int8)
 end
 
 -- Wrappers around the above to make this now Lua-esque
-asEnvironment = nil
+local asEnvironment = nil
 struct asEnvironment
 {
    __env : R.SEXP;
@@ -124,10 +124,54 @@ local emt =  {
 }
 R.asEnvironment = ffi.metatype(asEnvironment:cstring(),emt)
 
-function testNameSpace(p)
-   local myNS = R.asEnvironment(p)
-   local globalenv = R.asEnvironment()
-   print("Inside terra")
-   R.print(globalenv["foo"])
-   myNS["foo"] = Rbase.Rf_ScalarString(Rbase.Rf_mkChar("alpha"))
+-- Generate Code for INTEGER, DOUBLE, COMPLEX, LOGICAL
+-- for a in simpletypes do
+local t = {}
+local a = { {name = "Integer",rtype = R.types.INTSXP,ptr = Rbase.INTEGER, ctype  = int},
+	    {name = "Real",rtype = R.types.REALSXP,ptr = Rbase.REAL, ctype  = double},
+	    {name = "Complex",rtype = R.types.CPLXSXP,ptr = Rbase.COMPLEX, ctype  = R.Complex},
+	    {name = "Logical",rtype = R.types.LGLSXP,ptr = Rbase.LOGICAL, ctype  = int},
+	    {name = "Raw",rtype = R.types.RAWSXP,ptr = Rbase.RAW, ctype  = uint8}, 
+}
+for _,ty in pairs(a) do
+   t[ "Array" .. ty.name ] = terralib.types.newstruct( "Array" .. ty.name  )
+   t[ "Array" .. ty.name ].entries:insert{ field = "sexp", type = R.SEXP }
+   t[ "Array" .. ty.name ].entries:insert{ field = "ptr", type = &ty.ctype }
+   t[ "Array" .. ty.name ].entries:insert{ field = "length", type = int }
+   t[ "Array" .. ty.name ]:complete()
+   local emt =  {
+      __new = function(ct,...)
+	 local args = ...
+	 local fromSexp = args.fromSexp or false
+	 local fromOther = args.fromOther or false
+	 local copy = args.copy or false
+	 local length = args.length or 0
+	 local init = args.init or {}
+	 -- case when we want an unitialized vector of a given length
+	 if length >0 then
+	    local sexp =  Rbase.Rf_allocVector( ty.rtype, length)
+	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), length)
+	    ffi.gc(w.sexp,R.release)
+	    R.preserve(w.sexp)
+	    return w
+	 end
+	 if #init >0 then
+	    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
+	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), #init)
+	    ffi.gc(w.sexp,R.release)
+	    R.preserve(w.sexp)
+	    for i=1,#init do
+	       w.ptr[i-1] = init[i]
+	    end
+	    return w
+	 end
+      end
+   }
+   R[ "new" .. ty.name ] = ffi.metatype( t[ "Array" .. ty.name ]:cstring(),emt)
 end
+
+
+   
+-- Generate Code for STRING, VECTOR
+
+-- Wrappers for asMatrix, asDataFrame
