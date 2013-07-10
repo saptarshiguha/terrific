@@ -48,9 +48,15 @@ doTerraFile(normalizePath("./tests.t"))
 ## doTerra("testNameSpace",myNS)
 ## print(list(myNS$foo, foo))
 
+cat("Tests Start Now\n")
 
 ## IntegerVector Test
-a1 <- doTerra("makeIntegerVector")
-cat("intvector\n")
-print(a1)
+## a1 <- doTerra("makeIntegerVector")
+## cat("intvector\n")
+## print(a1)
 
+## IntegerVector2 Test
+x <- 1:5
+doTerra("makeIntegerVector2",x)
+cat("intvector\n")
+print(x)

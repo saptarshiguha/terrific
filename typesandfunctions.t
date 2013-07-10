@@ -140,14 +140,31 @@ for _,ty in pairs(a) do
    t[ "Array" .. ty.name ].entries:insert{ field = "length", type = int }
    t[ "Array" .. ty.name ]:complete()
    local emt =  {
+      __index  = function(tbl, key)
+	 return( tbl.ptr[ key[1] ])
+      end,
+      __newindex  = function(tbl, key,value)
+	 tbl.ptr[ key[1] ] = value
+      end,
       __new = function(ct,...)
 	 local args = ...
 	 local fromSexp = args.fromSexp or false
-	 local fromOther = args.fromOther or false
 	 local copy = args.copy or false
 	 local length = args.length or 0
 	 local init = args.init or {}
 	 -- case when we want an unitialized vector of a given length
+	 if not fromSexp == false then
+	    if copy == true then
+	       local sexp = Rbase.Rf_duplicate( from )
+	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), Rbase.LENGTH(sexp))
+	       ffi.gc(w.sexp,R.release)
+	       R.preserve(w.sexp)
+	       return w
+	    else
+	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, ty.ptr(fromSexp), Rbase.LENGTH(fromSexp))
+	       return w
+	    end
+	 end
 	 if length >0 then
 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, length)
 	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), length)
@@ -165,7 +182,7 @@ for _,ty in pairs(a) do
 	    end
 	    return w
 	 end
-      end
+      end,
    }
    R[ "new" .. ty.name ] = ffi.metatype( t[ "Array" .. ty.name ]:cstring(),emt)
 end
