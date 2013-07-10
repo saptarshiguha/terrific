@@ -19,7 +19,8 @@ mySocialClub <- function(n) cat(sprintf("the number you called is %s",n))
 
 init()
 doTerraFile("/home/sguha/mystuff/programming/terrific/tbase3.t")
-
+a <- doTerra("makeDF",10)
+print(a)
 ## doTerra("initialize_terra", list(NULL,NA_integer_,NaN,NA_real_,Inf,.GlobalEnv,baseenv(),emptyenv(),NA_character_))
 ## x <- runif(10)
 ## x <- c(2+3i, 4+5i)

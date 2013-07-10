@@ -198,7 +198,12 @@ local function typedOtherArray(atype)
       sexp      : R.SEXP;
       length    : int;
    }
-   local terra moshoo() end
+   local terra moshoo()
+      var a : ArrayT
+      a.sexp =  nil --Rinternals.Rf_allocVector([atype], 0)
+      a.length = 0
+      return(a)
+   end
    terra moshoo(length : int)
       var a : ArrayT
       a.sexp = Rinternals.Rf_allocVector([atype], length)
@@ -375,17 +380,17 @@ terra R.defineVariable(name :&int8, value:R.SEXP)
    Rinternals.Rf_defineVar(Rinternals.Rf_install(name),value,R.constants.GlobalEnv)
 end
 terra R.findVariable(name :&int8,env : R.SEXP)
-   SEXP res = Rinternals.Rf_findVar( Rinternals.Rf_install(name),env)
+   var res = Rinternals.Rf_findVar( Rinternals.Rf_install(name),env)
    if  res == R.constants.UnboundValue then
       return nil
    end
-   if R.type(res) = R.types.PROMSXP then
+   if R.type(res) == R.types.PROMSXP then
       res = Rinternals.Rf_eval(res, env)
    end
    return res
 end
 terra R.findVariable(name :&int8)
-   return R.findvariable(name, R.constants.GlobalEnv)
+   return R.findVariable(name, R.constants.GlobalEnv)
 end
 
 local getNamespace = R.makeRFunction("getNamespace",nil,1)
@@ -394,15 +399,41 @@ R.getNamespace  = terra(name : &int8)
 end
 terra R.makeXtnlPtr(data : &uint8, finalizer: R.SEXP -> {} ,info: R.SEXP)
    var a = Rinternals.R_MakeExternalPtr(data,R.constants.NilValue,info)
-   Rinternals.Rf_Protect(a)
+   Rinternals.Rf_protect(a)
    Rinternals.R_RegisterCFinalizerEx(a, finalizer, 1);
-   Rinternals.Rf_Unprotect(1)
+   Rinternals.Rf_unprotect(1)
    return a
 end
 terra R.makeXtnlPtr(data : &uint8, finalizer: R.SEXP -> {})
    return R.makeXtnlPtr(data, finalizer, nil)
 end
 R.XtnlPtr = R.R_ExternalPtrAddr
+
+-- function makeDataFrame(robject, names)
+--    local numNamedCols, numUnNamedCols = 0,#names
+--    for _,_ in pairs(names) do numNamedCols = numNamedCols + 1 end
+--    local total = numNamedCols+numUnNamedCols
+--    robject.sexp  = Rinternals.Rf_allocVector(R.types.VECSXP, 10)
+--    Rinternals.Rf_protect(robject)
+--    local cnt = 0
+--    for _, n in pairs(names) do
+--       Rinternals.SET_VECTOR_ELT(robject, cnt, n)
+--       cnt = cnt + 1
+--    end
+--    for i=1,numUnNamedCols do
+--       Rinternals.SET_VECTOR_ELT(robject, numNamedCols + i -1, names[i])
+--    end
+--    Rinternals.Rf_setAttrib(robject,Rinternals.Rf_install("class"),R.newScalarString("data.frame"))
+--    -- now add the names attribute
+--    local nn  = R.newString( numNamedCols)
+--    cnt = 0
+--    for id, _ in pairs(names) do
+--       nn.methods.set(nn, cnt, id)
+--    end
+--    Rinternals.Rf_setAttrib(robject,Rinternals.Rf_install("colnames"),nn.entries.sexp)
+--    Rinternals.Rf_unprotect(1)
+-- end
+
 
 
 
@@ -624,3 +655,25 @@ sum8 = ParamSum(8)
 sum16 = ParamSum(16)
 sum32 = ParamSum(32)
 
+
+food =function (a)
+   print(a)
+   return a
+end
+
+
+-- terra makeDF(x:R.SEXP)
+--    var a = R.newReal(arrayof(double, 1,2,3,4), 4)
+--    var b = R.newReal(arrayof(double, 3,2,1,2), 4)
+--    var d = R.newReal(arrayof(double, 3,-2,1,-2), 4)
+--    var c = R.newVector()
+--    var e  = {a=a,b=b}
+--    -- makeDataFrame(&c,&e)		--
+--    return c
+-- end
+   
+function makeDF(x)
+   local x = R.newScalarReal(1)
+   print(terralib.typeof(x))
+   return x
+end
