@@ -9,7 +9,9 @@ doTerra <- function(f,...,table=NULL){
   l <- list(...)
   .Call(fns[[length(l)+1]],f,table,...)
 }
-
+doTerraString <- function(s){
+  .Call("terraDoString",s)
+}
 ##' @param includes is a vector of include directories
 ##' @param libraries path to libraries to load, rterra automaticall includes its own library
 ##' @return TRUE upon success, error if it fails
@@ -35,8 +37,7 @@ init <- function(includes,libraries){
 }
 
 init()
-doTerraFile(normalizePath("./typesandfunctions.t"))
-
+doTerraString("terralib.require('typesandfunctions')")
 
 ## Example Tests
 doTerraFile(normalizePath("./tests.t"))
@@ -56,7 +57,13 @@ cat("Tests Start Now\n")
 ## print(a1)
 
 ## IntegerVector2 Test
-x <- 1:5
-doTerra("makeIntegerVector2",x)
-cat("intvector\n")
+## x <- 1:5
+## doTerra("makeIntegerVector2",x)
+## cat("intvector\n")
+## print(x)
+
+## Integer With Attributes
+x <- structure(1:5,foo="superman")
+y=1:4
+doTerra("intVectorWithAttr",x,y)
 print(x)

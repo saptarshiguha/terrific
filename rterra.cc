@@ -22,6 +22,7 @@ extern "C" {
     return (s);
   }
 
+
   SEXP newTerra(){
     SEXP s=R_NilValue;
     lua_State *l = luaL_newstate(); //create a plain lua state
@@ -111,6 +112,17 @@ extern "C" {
   SEXP terraDoFile(SEXP s){
     const char *s1 = CHAR(STRING_ELT(s,0));
     int r = terra_dofile(L, s1);
+    lua_gc(L,LUA_GCCOLLECT,0);
+    if(r) {
+      return(doerror(L));
+    }
+    SEXP res = Rf_allocVector(INTSXP, 1);
+    INTEGER(res)[0] = r;
+    return(res); // 0 is okay, 1 is BAD
+  }
+  SEXP terraDoString(SEXP s){
+    const char *s1 = CHAR(STRING_ELT(s,0));
+    int r = terra_dostring(L, s1);
     lua_gc(L,LUA_GCCOLLECT,0);
     if(r) {
       return(doerror(L));

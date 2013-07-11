@@ -1,4 +1,21 @@
 terralib.require("base")
+Rbase   = terralib.includecstring [[
+  #include <rterra.h>
+]]
+function Rbase.ptable(w)   for key,value in pairs(w) do print(key,value) end end
+
+R = {}
+R.types = { NILSXP              = 0, SYMSXP		= 1, LISTSXP		= 2,	
+	    CLOSXP		= 3, ENVSXP		= 4, PROMSXP		= 5,	
+	    LANGSXP		= 6, SPECIALSXP	        = 7, BUILTINSXP	        = 8,	
+	    CHARSXP		= 9, LGLSXP		= 10, INTSXP		= 13,	
+	    REALSXP		= 14, CPLXSXP		= 15, STRSXP		= 16,	
+	    DOTSXP		= 17, ANYSXP		= 18, VECSXP		= 19,	
+	    EXPRSXP		= 20, BCODESXP		= 21, EXTPTRSXP		= 22,	
+	    WEAKREFSXP	        = 23, RAWSXP		= 24, S4SXP		= 25,	
+	    NEWSXP		= 30, FREESXP		= 31, FUNSXP		= 99	
+}
+print("Entering TYPES")
 R.SEXP = &Rbase.SEXPREC
 R.print = Rbase.Rf_PrintValue
 R.isNA = Rbase.R_IsNA
@@ -126,6 +143,7 @@ R.asEnvironment = ffi.metatype(asEnvironment:cstring(),emt)
 
 -- Generate Code for INTEGER, DOUBLE, COMPLEX, LOGICAL
 -- for a in simpletypes do
+
 local t = {}
 local a = { {name = "Integer",rtype = R.types.INTSXP,ptr = Rbase.INTEGER, ctype  = int},
 	    {name = "Real",rtype = R.types.REALSXP,ptr = Rbase.REAL, ctype  = double},
@@ -133,11 +151,22 @@ local a = { {name = "Integer",rtype = R.types.INTSXP,ptr = Rbase.INTEGER, ctype 
 	    {name = "Logical",rtype = R.types.LGLSXP,ptr = Rbase.LOGICAL, ctype  = int},
 	    {name = "Raw",rtype = R.types.RAWSXP,ptr = Rbase.RAW, ctype  = uint8}, 
 }
+
+
+R.getAttr = function(self, attr)
+   return Rbase.Rf_getAttrib(self.sexp,Rbase.Rf_install(attr))
+end
+R.setAttr = function(self, attr,value)
+   Rbase.Rf_setAttrib(self.sexp,Rbase.Rf_install(attr),value)
+end
+
 for _,ty in pairs(a) do
    t[ "Array" .. ty.name ] = terralib.types.newstruct( "Array" .. ty.name  )
    t[ "Array" .. ty.name ].entries:insert{ field = "sexp", type = R.SEXP }
    t[ "Array" .. ty.name ].entries:insert{ field = "ptr", type = &ty.ctype }
    t[ "Array" .. ty.name ].entries:insert{ field = "length", type = int }
+   t[ "Array" .. ty.name ].entries:insert{ field = "getAttr", type = { & t[ "Array" .. ty.name ],rawstring} -> {R.SEXP} }
+   t[ "Array" .. ty.name ].entries:insert{ field = "setAttr", type = { & t[ "Array" .. ty.name ],rawstring,R.SEXP} -> {} }
    t[ "Array" .. ty.name ]:complete()
    local emt =  {
       __index  = function(tbl, key)
@@ -155,26 +184,27 @@ for _,ty in pairs(a) do
 	 -- case when we want an unitialized vector of a given length
 	 if not fromSexp == false then
 	    if copy == true then
-	       local sexp = Rbase.Rf_duplicate( from )
-	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), Rbase.LENGTH(sexp))
+	       local sexp = Rbase.Rf_duplicate( fromSexp )
+	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), Rbase.LENGTH(sexp),R.getAttr,R.setAttr)
 	       ffi.gc(w.sexp,R.release)
 	       R.preserve(w.sexp)
 	       return w
 	    else
-	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, ty.ptr(fromSexp), Rbase.LENGTH(fromSexp))
+	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, ty.ptr(fromSexp), Rbase.LENGTH(fromSexp),R.getAttr,R.setAttr)
 	       return w
 	    end
 	 end
 	 if length >0 then
 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, length)
-	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), length)
+	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), length,R.getAttr,R.setAttr)
+	    w.getAttr = getAttr
 	    ffi.gc(w.sexp,R.release)
 	    R.preserve(w.sexp)
 	    return w
 	 end
 	 if #init >0 then
 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
-	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), #init)
+	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), #init,R.getAttr,R.setAttr)
 	    ffi.gc(w.sexp,R.release)
 	    R.preserve(w.sexp)
 	    for i=1,#init do
@@ -187,8 +217,8 @@ for _,ty in pairs(a) do
    R[ "new" .. ty.name ] = ffi.metatype( t[ "Array" .. ty.name ]:cstring(),emt)
 end
 
+return R,Rbase
 
-   
 -- Generate Code for STRING, VECTOR
 
 -- Wrappers for asMatrix, asDataFrame
