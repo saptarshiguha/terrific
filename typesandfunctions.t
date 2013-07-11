@@ -173,10 +173,10 @@ for _,ty in pairs(a) do
    t[ "Array" .. ty.name ]:complete()
    local emt =  {
       __index  = function(tbl, key)
-	 return( tbl.ptr[ key[1] ])
+	 return( tbl.ptr[ key ])
       end,
       __newindex  = function(tbl, key,value)
-	 tbl.ptr[ key[1] ] = value
+	 tbl.ptr[ key ] = value
       end,
       __new = function(ct,...)
 	 local args = ...

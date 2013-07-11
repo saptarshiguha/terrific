@@ -10,13 +10,13 @@ end
 
 function makeIntegerVector()
    local z = R.newInteger{init = {0,21,3,R.constants.NaLOGICAL}}
-   z[{0}] = 31 + z[{1}]
+   z[0] = 31 + z[1]
    return z.sexp
 end
 
 function makeIntegerVector2(p)
    local z = R.newInteger{fromSexp = p}
-   z[{0}] = 31
+   z[0] = 31
 end
 
 function intVectorWithAttr(p,n)
