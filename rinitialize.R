@@ -43,53 +43,53 @@ res1 <- doTerraString("terralib.require('typesandfunctions')")
 res2 <- doTerraFile(normalizePath("./tests.t"))
 
 cat("Tests Start Now\n")
-## Environment Test
-myNS = new.env()
-myNS$foo = 1.234
-foo=2.45
-doTerra("testNameSpace",myNS)
-print(list(myNS$foo, foo))
+#### Environment Test
+## myNS = new.env()
+## myNS$foo = 1.234
+## foo=2.45
+## doTerra("testNameSpace",myNS)
+## print(list(myNS$foo, foo))
 
 
-## IntegerVector Test
-a1 <- doTerra("makeIntegerVector")
-cat("intvector\n")
-print(a1)
+## ## IntegerVector Test
+## a1 <- doTerra("makeIntegerVector")
+## cat("intvector\n")
+## print(a1)
 
-## IntegerVector2 Test
-x <- 1:5
-doTerra("makeIntegerVector2",x)
-cat("intvector\n")
-print(x)
+## ## IntegerVector2 Test
+## x <- 1:5
+## doTerra("makeIntegerVector2",x)
+## cat("intvector\n")
+## print(x)
 
-## Integer With Attributes
-x <- structure(1:5,foo="superman")
-y=as.character(1:4)
-doTerra("intVectorWithAttr",x,y)
-print(x)
-
-
-## Matrix Test
-y= matrix(as.numeric(1:10),ncol=2)
-print(y)
-doTerra("matrixTest",y)
+## ## Integer With Attributes
+## x <- structure(1:5,foo="superman")
+## y=as.character(1:4)
+## doTerra("intVectorWithAttr",x,y)
+## print(x)
 
 
-## vector creation
-doTerra("createVector")
+## ## Matrix Test
+## y= matrix(as.numeric(1:10),ncol=2)
+## print(y)
+## doTerra("matrixTest",y)
+
+
+## ## vector creation
+## doTerra("createVector")
 
 
 ## gibbs sampling tests
-## a <- as.integer((c(50000,1000)))
-## dyn.load(normalizePath("gibstest.so"))
-## invisible(gc())
+a <- as.integer((c(100000,2000)))
+dyn.load(normalizePath("gibstest.so"))
+invisible(gc())
 
 ## res <- system.time(.Call("doGibbs",a))
 ## cat(".Call to C code\n")
 ## print(res)
 
-## doTerraString(sprintf('terralib.linklibrary("%s")',normalizePath("gibstest.so")))
-## doTerraFile(normalizePath("gsltest.t"))
+doTerraString(sprintf('terralib.linklibrary("%s")',normalizePath("gibstest.so")))
+doTerraFile(normalizePath("gsltest.t"))
 
 ## invisible(gc())
 ## res <- system.time(.Call("doTerraFunc1","doGibbsJIT",NULL,a))
@@ -103,8 +103,8 @@ doTerra("createVector")
 ## print(res)
 
 
-## res <- system.time(.Call("doTerraFunc2","doGibbsTerraParallel",NULL,a,as.integer(1)))
-## cat(".Call to Terra code\n")
-## print(res)
+res <- system.time(.Call("doTerraFunc2","doGibbsTerraParallel",NULL,a,as.integer(5)))
+cat(".Call to Terra code\n")
+print(res)
 
-## invisible(gc())
+invisible(gc())
