@@ -36,12 +36,13 @@ init <- function(includes,libraries){
   TRUE
 }
 
-init()
-doTerraString("terralib.require('typesandfunctions')")
+res0 <- init()
+res1 <- doTerraString("terralib.require('typesandfunctions')")
 
 ## Example Tests
-doTerraFile(normalizePath("./tests.t"))
+res2 <- doTerraFile(normalizePath("./tests.t"))
 
+cat("Tests Start Now\n")
 ## Environment Test
 ## myNS = new.env()
 ## myNS$foo = 1.234
@@ -49,7 +50,6 @@ doTerraFile(normalizePath("./tests.t"))
 ## doTerra("testNameSpace",myNS)
 ## print(list(myNS$foo, foo))
 
-cat("Tests Start Now\n")
 
 ## IntegerVector Test
 ## a1 <- doTerra("makeIntegerVector")
@@ -63,7 +63,43 @@ cat("Tests Start Now\n")
 ## print(x)
 
 ## Integer With Attributes
-x <- structure(1:5,foo="superman")
-y=1:4
-doTerra("intVectorWithAttr",x,y)
-print(x)
+## x <- structure(1:5,foo="superman")
+## y=as.character(1:4)
+## doTerra("intVectorWithAttr",x,y)
+## print(x)
+
+
+## Matrix Test
+## y= matrix(as.numeric(1:10),ncol=2)
+## print(y)
+## doTerra("matrixTest",y)
+
+
+## vector creation
+## doTerra("createVector")
+
+
+## gibbs sampling tests
+## a <- as.integer((c(50000,1000)))
+## dyn.load(normalizePath("gibstest.so"))
+## invisible(gc())
+
+## res <- system.time(.Call("doGibbs",a))
+## cat(".Call to C code\n")
+## print(res)
+
+## doTerraString(sprintf('terralib.linklibrary("%s")',normalizePath("gibstest.so")))
+## doTerraFile(normalizePath("gsltest.t"))
+
+## invisible(gc())
+## res <- system.time(.Call("doTerraFunc1","doGibbsJIT",NULL,a))
+## cat(".Call to JITted code\n")
+## print(res)
+
+## invisible(gc())
+## res <- system.time(.Call("doTerraFunc1","doGibbsTerra",NULL,as.integer(c(100,10))));invisible(gc())
+## res <- system.time(.Call("doTerraFunc1","doGibbsTerra",NULL,a))
+## cat(".Call to Terra code\n")
+## print(res)
+
+## invisible(gc())
