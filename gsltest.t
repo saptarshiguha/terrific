@@ -9,8 +9,8 @@ const gsl_rng_type *gsl_rng_mt19937;
 const gsl_rng_type* get_mt19937();
 ]]
 
-terralib.linklibrary("/usr/lib/libgsl.so")
-terralib.linklibrary("/usr/lib/libgslcblas.so")
+terralib.linklibrary("libgsl.so")
+terralib.linklibrary("libgslcblas.so")
 
 terralib.linklibrary("gibstest.so")
 
@@ -73,11 +73,11 @@ function doGibbsTerra(p)
    return r
 end
 -- pkg-config glib-2.0 --cflags
-
+linuxtype = "Ubuntu"
 if linuxtype == nil or linuxtype == "Ubuntu" then 
-   terralib.includepath = terralib.includepath .. ";/usr/local/include/glib-2.0;/usr/local/lib/glib-2.0/include"
+   terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include"
 elseif linuxtype == "Centos" then
-   terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib64/glib-2.0/include"
+   terralib.includepath = terralib.includepath .. ";/usr/local/include/glib-2.0;/usr/local/lib/glib-2.0/include"
 end
 glib = terralib.includec("glib-2.0/glib.h")
 terralib.linklibrary("libglib-2.0.so")
