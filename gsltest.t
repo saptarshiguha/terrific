@@ -10,6 +10,8 @@ const gsl_rng_type* get_mt19937();
 ]]
 
 terralib.linklibrary("/usr/lib/libgsl.so")
+terralib.linklibrary("/usr/lib/libgslcblas.so")
+
 terralib.linklibrary("gibstest.so")
 
 terra initgsl_rng()
