@@ -80,7 +80,7 @@ cat("Tests Start Now\n")
 
 
 ## gibbs sampling tests
-a <- as.integer((c(100000,2000)))
+a <- as.integer((c(50000,500)))
 dyn.load(normalizePath("gibstest.so"))
 invisible(gc())
 
@@ -97,14 +97,14 @@ doTerraFile(normalizePath("gsltest.t"))
 ## print(res)
 
 ## invisible(gc())
-## res <- system.time(.Call("doTerraFunc1","doGibbsTerra",NULL,as.integer(c(100,10))));invisible(gc())
-## res <- system.time(.Call("doTerraFunc1","doGibbsTerra",NULL,a))
-## cat(".Call to Terra code\n")
-## print(res)
+res <- system.time(.Call("doTerraFunc1","doGibbsTerra",NULL,as.integer(c(100,10))));invisible(gc())
+res <- system.time(.Call("doTerraFunc1","doGibbsTerra",NULL,a))
+cat(".Call to Terra code\n")
+print(res)
 
 
 res <- system.time(.Call("doTerraFunc2","doGibbsTerraParallel",NULL,a,as.integer(5)))
-cat(".Call to Terra code\n")
+cat(".Call to Terra Parallel code\n")
 print(res)
 
 invisible(gc())

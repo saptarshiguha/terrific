@@ -87,9 +87,10 @@ terra _driver(data:glib.gpointer, userdata:glib.gpointer) : {}
    var i = @([&int](data))
    var r = ud.r
    var N = ud.N
+   var thin = ud.thin
    
    var rng = gsl.gsl_rng_alloc([&gsl.gsl_rng_type] (gsl.get_mt19937()))
-   for j=0, ud.thin do
+   for j=0, thin do
       var x,y = 0.0,0.0
       x=gsl.gsl_ran_gamma(rng,3.0,1.0/(y*y+4));
       y=1.0/(x+1)+gsl.gsl_ran_gaussian(rng,1.0/cmath.sqrt(2*x+2))
@@ -97,10 +98,12 @@ terra _driver(data:glib.gpointer, userdata:glib.gpointer) : {}
    end
    gsl.gsl_rng_free(rng)
 end
+_driver:compile()
 
 terra _doGibbsTerra1(r:&double, N:int, thin:int ,numthreads:int)
    var p = { N = N, thin=thin, r=r}
    var threadpool = glib.g_thread_pool_new(_driver,&p,numthreads,0,nil)
+   glib.g_thread_pool_set_max_threads(threadpool, numthreads, nil)
    var integers = [&int](stdlib.malloc(sizeof(int)*N))
    for i=0,N do
       integers[i] = i
@@ -108,6 +111,7 @@ terra _doGibbsTerra1(r:&double, N:int, thin:int ,numthreads:int)
    end
    glib.g_thread_pool_free (threadpool,0,1)
 end
+_doGibbsTerra1:compile()
 function doGibbsTerraParallel(p,nt)
    local p1 = R.newInteger{fromSexp = p}
    local N,thin = p1[0], p1[1]
@@ -115,3 +119,6 @@ function doGibbsTerraParallel(p,nt)
    _doGibbsTerra1( r.ptr, N,thin, R.newInteger{fromSexp=nt}[0])
    return r
 end
+
+
+
