@@ -116,5 +116,6 @@ cat("Tests Start Now\n")
 ## Test QT
 ## ########################
 doTerraFile(normalizePath("qt.initialize.terra"))
-doTerra("qtinit",NULL)
+doTerra("qtinit")
+doTerraFile(normalizePath("example.window.qt.lua"))
 a <- doTerra("doTest2",NULL)

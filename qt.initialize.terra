@@ -2,12 +2,12 @@ require 'qtcore'
 require 'qtgui'
 pthread = terralib.includec("pthread.h")
 terralib.linklibrary("libQtCore.so")
+
 local ifd = global(int)
 local ofd = global(int)
 local fired=global(int,0)
 local qtwriterthread = global(pthread.pthread_t)
 local App = nil
-local mu = {}
 function processQTEvents(x)
    QCoreApplication.processEvents()
 end
