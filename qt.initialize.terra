@@ -33,7 +33,7 @@ terra QTEventLoopInit()
    if unistd.pipe(fds) == 0  then
       ifd,ofd = fds[0],fds[1]
       Rbase.addInputHandler(R.constants.InputHandlers,ifd,QTEventLoopHandler,31)
-      RRbase.setCStackLimit(-1)
+      Rbase.setCStackLimit(-1)
       pthread.pthread_create(&qtwriterthread,nil,mywriter,nil);
    end
 end
