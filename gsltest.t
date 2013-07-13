@@ -72,8 +72,9 @@ function doGibbsTerra(p)
    _doGibbsTerra( r.ptr, N,thin)
    return r
 end
+-- pkg-config glib-2.0 --cflags
 
-if linuxtype == "Ubuntu" then 
+if linuxtype == nil or linuxtype == "Ubuntu" then 
    terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include"
 elseif linuxtype = "Centos" then
    terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib64/glib-2.0/include"
