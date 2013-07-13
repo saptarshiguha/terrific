@@ -32,8 +32,8 @@ terra QTEventLoopInit()
    var fds : int[2]
    if unistd.pipe(fds) == 0  then
       ifd,ofd = fds[0],fds[1]
-      Rinternals.addInputHandler(R.constants.InputHandlers,ifd,QTEventLoopHandler,31)
-      Rinternals.setCStackLimit(-1)
+      Rbase.addInputHandler(R.constants.InputHandlers,ifd,QTEventLoopHandler,31)
+      RRbase.setCStackLimit(-1)
       pthread.pthread_create(&qtwriterthread,nil,mywriter,nil);
    end
 end
