@@ -75,8 +75,8 @@ end
 -- pkg-config glib-2.0 --cflags
 
 if linuxtype == nil or linuxtype == "Ubuntu" then 
-   terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include"
-elseif linuxtype = "Centos" then
+   terralib.includepath = terralib.includepath .. ";/usr/local/include/glib-2.0;/usr/local/lib/glib-2.0/include"
+elseif linuxtype == "Centos" then
    terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib64/glib-2.0/include"
 end
 glib = terralib.includec("glib-2.0/glib.h")
