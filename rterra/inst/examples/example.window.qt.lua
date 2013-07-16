@@ -38,7 +38,7 @@ function createWindow(whatstring)
    return window
 end
    
-mu = {}
+local mu = {}
 doTest1 = nil
 function doTest1(x)
    local printstring = ffi.string(Rinternals.R_CHAR(Rinternals.STRING_ELT(x, 0)))
@@ -47,14 +47,16 @@ function doTest1(x)
    mu.window:show()
 end
 
+doTest2 = nil
 function doTest2(x)
-   mu.Btn = QPushButton.new("Quit!")
-   mu.Btn:show()
-   mu.Btn:connect('2clicked()',
-		  function()
-		     print("BYeeee\n")
-		     mu.Btn:close()
-	       end)
+   local z  = QPushButton.new("Quit!")
+   mu[#mu +1 ] =  z
+   z:show()
+   z:connect('2clicked()',
+	     function()
+		print("Byeeee\n")
+		z:close()
+	     end)
    return nil
 end
 

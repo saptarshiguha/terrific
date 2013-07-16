@@ -15,7 +15,7 @@ R.types = { NILSXP              = 0, SYMSXP		= 1, LISTSXP		= 2,
 	    WEAKREFSXP	        = 23, RAWSXP		= 24, S4SXP		= 25,	
 	    NEWSXP		= 30, FREESXP		= 31, FUNSXP		= 99	
 }
-print("Entering TYPES")
+
 R.SEXP = &Rbase.SEXPREC
 R.print = Rbase.Rf_PrintValue
 R.isNA = Rbase.R_IsNA
@@ -240,6 +240,43 @@ local a = { {
 	    }
 }
 
+initInitializer = {}
+initInitializer[R.types.STRSXP] = function(ty,init)
+   local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
+   local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,R.getAttr,R.setAttr)
+   ffi.gc(w.sexp,R.release)
+   R.preserve(w.sexp)
+   for i=1,#init do
+      ty.writer(w.sexp, i-1,init[i])
+   end
+   return w
+end
+
+initInitializer[R.types.VECSXP] = function(ty,init)
+   local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
+   local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,R.getAttr,R.setAttr)
+   ffi.gc(w.sexp,R.release)
+   R.preserve(w.sexp)
+   local names = {}
+   local cnt = 0
+   local hasatleastonename = false
+   for i, n in pairs(init) do
+      cnt = cnt + 1
+      names[cnt]  = n
+      ty.writer(w.sexp, cnt-1,init[i])
+   end
+   if #names >0  then hasatleastonename = true end
+   for i=1,#init do
+      cnt = cnt+1
+      names[cnt] = ""
+      ty.writer(w.sexp, cnt-1,init[i])
+   end
+   if hasatleastonename then
+      Rbase.Rf_setAttrib(sexp,Rbase.Rf_install("names"),R.newString{init=names}  )
+   end
+   return w
+end
+
 for _,ty in pairs(a) do
    t[ "Array" .. ty.name ] = terralib.types.newstruct( "Array" .. ty.name  )
    t[ "Array" .. ty.name ].entries:insert{ field = "sexp", type = R.SEXP }
@@ -282,14 +319,8 @@ for _,ty in pairs(a) do
 	    return w
 	 end
 	 if #init >0 then
-	    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
-	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,R.getAttr,R.setAttr)
-	    ffi.gc(w.sexp,R.release)
-	    R.preserve(w.sexp)
-	    for i=1,#init do
-	       ty.writer(w.sexp, i-1,init[i])
-	    end
-	    return w
+	    local w = initInitializer[ty.rtype]( ty,init )
+	    return (w)
 	 end
       end,
    }
@@ -334,9 +365,12 @@ R.asMatrix = function(obj,...)
    return R._matrices[ obj.type ]( obj,...)
 end
 
--- function R.asDataFrame(arg,colnames)
+-- function R.asDataFrame(rsexp,colnames)
    
 -- end
-
+R.testmethod = function(a)
+   R.print(a)
+end
+print("Loaded rtypes")
 return R,Rbase
  

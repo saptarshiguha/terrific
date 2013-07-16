@@ -1,71 +1,18 @@
-#include <R.h>
-#include <Rinternals.h>
-#include "terra.h"
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include <R_ext/Parse.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include "a.h"
 #include <stdint.h>
-static lua_State * L;
-_RConstants RConstants;
-extern uintptr_t R_CStackLimit;
+#include <terra.h>
 
+#include "rterra.h"
+
+static lua_State * L;
+extern uintptr_t R_CStackLimit;
 
 extern "C" {
   void setCStackLimit(int a){
     R_CStackLimit = a;
   }
-  SEXP doSetN(SEXP a){
-    double* b = REAL(a);
-    SEXP dims = Rf_getAttrib(a,Rf_install("dim"));
-    int nrows = INTEGER(dims)[0];
-    int ncols = INTEGER(dims)[1];
-    for(int i=0; i< nrows;i++){
-      for(int j=0; j<ncols;j++){
-	b[ i+j*nrows] = 10;
-      }
-    }
-    return R_NilValue;
-  }
-  SEXP doCSum(SEXP a){
-    double* d =REAL(a);
-    double s=0;
-    int j = LENGTH(a);
-    for(int i=0;i<j;i++) s=s+d[i];
-    SEXP r = Rf_allocVector(REALSXP,1);
-    PROTECT(r);
-    REAL(r)[0] = s;
-    UNPROTECT(1);
-    return(r);
-  }
-
-  const gsl_rng_type* get_mt19937(){
-    return gsl_rng_mt19937;
-  }
-  SEXP doGibbs(SEXP p){
-    int N=INTEGER(p)[0];
-    int thin=INTEGER(p)[1];
-    SEXP r ;
-    PROTECT(r=Rf_allocVector(REALSXP, N*2));
-    int i,j;
-    gsl_rng *rng = gsl_rng_alloc(gsl_rng_mt19937);
-    double x=0;
-    double y=0;
-    double* base = REAL(r);
-    for (i=0;i<N;i++) {
-      for (j=0;j<thin;j++) {
-    	x=gsl_ran_gamma(rng,3.0,1.0/(y*y+4));
-    	y=1.0/(x+1)+gsl_ran_gaussian(rng,1.0/sqrt(2*x+2));
-    	base[ i ]  = x; base[i+N] = y;
-      }
-    }
-    UNPROTECT(1);
-    return(r);
-  }
-	  
   SEXP  doerror(lua_State * L) {
     const char *x = luaL_checkstring(L,-1);
     SEXP s;
@@ -74,6 +21,7 @@ extern "C" {
     UNPROTECT(1);
     return (s);
   }
+
 
   SEXP newTerra(){
     SEXP s=R_NilValue;
@@ -139,7 +87,7 @@ extern "C" {
     if (status && !lua_isnil(L, -1)) {
       const char *msg = lua_tostring(L, -1);
       if (msg == NULL) msg = "(error object is not a string)";
-      l_message("Terrific Error: ", msg);
+      l_message("[Terrific Error]: ", msg);
       lua_pop(L, 1);
     }
     return status;
@@ -172,6 +120,17 @@ extern "C" {
     INTEGER(res)[0] = r;
     return(res); // 0 is okay, 1 is BAD
   }
+  SEXP terraDoString(SEXP s){
+    const char *s1 = CHAR(STRING_ELT(s,0));
+    int r = terra_dostring(L, s1);
+    lua_gc(L,LUA_GCCOLLECT,0);
+    if(r) {
+      return(doerror(L));
+    }
+    SEXP res = Rf_allocVector(INTSXP, 1);
+    INTEGER(res)[0] = r;
+    return(res); // 0 is okay, 1 is BAD
+  }
 
   SEXP carryOn(SEXP _n,int n){
     int status= docall(L,n);
@@ -183,38 +142,44 @@ extern "C" {
 	lua_pop(L,1);
 	return(a);
       }
-    }else Rf_error("Terrfic Error in computing function:%s",STRING_ELT(_n,0));
+    }else Rf_error("[terrific] Error in computing function:%s",STRING_ELT(_n,0));
     return(R_NilValue);
   }
 
-  SEXP doTerraFunc0(SEXP _n, SEXP s1){
-    lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(_n,0)));
-    lua_pushlightuserdata(L, s1);
+  void setFunction(SEXP _n, SEXP tb){
+    if(tb!=R_NilValue) {
+      lua_getglobal(L, CHAR(STRING_ELT(tb,0)));
+      if(lua_isnoneornil (L,-1))
+	Rf_error("There was an error looking up the table");
+      lua_getfield(L,-1,CHAR(STRING_ELT(_n,0)));
+    }else lua_getglobal(L,CHAR(STRING_ELT(_n,0)));
+  }
+				    
+  SEXP doTerraFunc0(SEXP _n, SEXP tb){
+    setFunction(_n, tb);
     return(carryOn(_n,0));
   }
 
-  SEXP doTerraFunc1(SEXP _n, SEXP s1){
-    lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(_n,0)));
+  SEXP doTerraFunc1(SEXP _n,SEXP tb, SEXP s1){
+    setFunction(_n, tb);
     lua_pushlightuserdata(L, s1);
     return(carryOn(_n,1));
   }
-
-  SEXP doTerraFunc2(SEXP _n,SEXP s1,SEXP s2){
-    lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(_n,0)));
+  SEXP doTerraFunc2(SEXP _n,SEXP tb,SEXP s1,SEXP s2){
+    setFunction(_n, tb);
     lua_pushlightuserdata(L, s1);
     lua_pushlightuserdata(L, s2);
     return(carryOn(_n,2));
   }
-  SEXP doTerraFunc3(SEXP _n,SEXP s1,SEXP s2, SEXP s3){
-    lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(_n,0)));
+  SEXP doTerraFunc3(SEXP _n,SEXP tb,SEXP s1,SEXP s2, SEXP s3){
+    setFunction(_n, tb);
     lua_pushlightuserdata(L, s1);
     lua_pushlightuserdata(L, s2);
     lua_pushlightuserdata(L, s3);
     return(carryOn(_n,3));
-
   }
-  SEXP doTerraFunc4(SEXP _n,SEXP s1,SEXP s2,SEXP s3,SEXP s4){
-    lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(_n,0)));
+  SEXP doTerraFunc4(SEXP _n,SEXP tb,SEXP s1,SEXP s2,SEXP s3,SEXP s4){
+    setFunction(_n, tb);
     lua_pushlightuserdata(L, s1);
     lua_pushlightuserdata(L, s2);
     lua_pushlightuserdata(L, s3);
@@ -222,8 +187,8 @@ extern "C" {
     return(carryOn(_n,4));
 
   }
-  SEXP doTerraFunc5(SEXP _n,SEXP s1,SEXP s2, SEXP s3,SEXP s4, SEXP s5){
-    lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(_n,0)));
+  SEXP doTerraFunc5(SEXP _n,SEXP tb,SEXP s1,SEXP s2, SEXP s3,SEXP s4, SEXP s5){
+    setFunction(_n, tb);
     lua_pushlightuserdata(L, s1);
     lua_pushlightuserdata(L, s2);
     lua_pushlightuserdata(L, s3);
@@ -231,6 +196,46 @@ extern "C" {
     lua_pushlightuserdata(L, s5);
     return(carryOn(_n,5));
   }
+  SEXP doTerraFunc6(SEXP _n,SEXP tb,SEXP s1,SEXP s2, SEXP s3,SEXP s4, SEXP s5,SEXP s6){
+    setFunction(_n, tb);
+    lua_pushlightuserdata(L, s1);
+    lua_pushlightuserdata(L, s2);
+    lua_pushlightuserdata(L, s3);
+    lua_pushlightuserdata(L, s4);
+    lua_pushlightuserdata(L, s5);
+    lua_pushlightuserdata(L, s6);
+    return(carryOn(_n,6));
+  }
+  SEXP doTerraFunc7(SEXP _n,SEXP tb,SEXP s1,SEXP s2, SEXP s3,SEXP s4, SEXP s5,SEXP s6,SEXP s7){
+    setFunction(_n, tb);
+    lua_pushlightuserdata(L, s1);
+    lua_pushlightuserdata(L, s2);
+    lua_pushlightuserdata(L, s3);
+    lua_pushlightuserdata(L, s4);
+    lua_pushlightuserdata(L, s5);
+    lua_pushlightuserdata(L, s6);
+    lua_pushlightuserdata(L, s7);
+    return(carryOn(_n,7));
+  }
+
+  SEXP initLibraryLoad(SEXP r1,SEXP r2,SEXP r0){
+     if(r1!=R_NilValue) {
+      lua_getglobal(L, CHAR(STRING_ELT(r1,0)));
+      lua_getfield(L, -1, CHAR(STRING_ELT(r2,0)));
+     }else lua_getfield(L, LUA_GLOBALSINDEX,CHAR(STRING_ELT(r2,0)));
+
+    for(int i=0; i< LENGTH(r0);i++){
+      const char *f = CHAR(STRING_ELT(r0,i));
+      lua_pushlstring(L, f, strlen(f));
+    }
+    int status= docall(L,LENGTH(r0));
+    report(L,status);
+    if(status)
+      Rf_error("[terrific error]: In Loading Libraries");;
+    return(R_NilValue);
+  }
+  
+
   SEXP rexpress(const char* cmd)
   {
     SEXP cmdSexp, cmdexpr, ans = R_NilValue;
@@ -241,7 +246,7 @@ extern "C" {
     cmdexpr = PROTECT(R_ParseVector(cmdSexp, -1, &status, R_NilValue));
     if (status != PARSE_OK) {
       UNPROTECT(2);
-      Rf_error("invalid call: %s", cmd);
+      Rf_error("[terrific error]: invalid call: %s", cmd);
       return(R_NilValue);
     }
     int rerr;
@@ -250,40 +255,29 @@ extern "C" {
     UNPROTECT(2);
     return(ans);
   }
-  // SEXP rfunction(const char* fname, const char* ns, int args){
-  //   SEXP Package;
-  //   PROTECT(
-  // 	    Package = eval( lang2( install("getNamespace"),
-  // 				   ScalarString(mkChar(ns)) ),
-  // 			    R_GlobalEnv
-  // 			    )
-  // 	    ); 
-    
-    
+  // SEXP getGlobalEnv(){
+  //   return R_GlobalEnv;
   // }
-  SEXP getGlobalEnv(){
-    return R_GlobalEnv;
-  }
   int type(SEXP o){
     return TYPEOF(o);
   }
   const char* mychar(SEXP o){
     return CHAR(o);
   }
-  _RConstants* getConstants(){
-    RConstants.NilValue = R_NilValue;
-    RConstants.NaN = R_NaN;
-    RConstants.PosInf = R_PosInf;
-    RConstants.NegInf = R_NegInf;
-    RConstants.NaREAL = NA_REAL;
-    RConstants.NaINTEGER = NA_INTEGER;
-    RConstants.NaLOGICAL = NA_LOGICAL;
-    RConstants.NaSTRING = R_NaString;
-    RConstants.GlobalEnv = R_GlobalEnv;
-    RConstants.EmptyEnv = R_EmptyEnv;
-    RConstants.BaseEnv = R_BaseEnv;
-    RConstants.InputHandlers = R_InputHandlers;
-    RConstants.UnboundValue  = R_UnboundValue ;
-    return &RConstants;
+  void getConstants(_RConstants* RConstants){
+    // _RConstants *rc =(_RConstants*)malloc(sizeof( _RConstants));
+    RConstants->NilValue = R_NilValue;
+    RConstants->NaN = R_NaN;
+    RConstants->PosInf = R_PosInf;
+    RConstants->NegInf = R_NegInf;
+    RConstants->NaREAL = NA_REAL;
+    RConstants->NaINTEGER = NA_INTEGER;
+    RConstants->NaLOGICAL = NA_LOGICAL;
+    RConstants->NaSTRING = R_NaString;
+    RConstants->GlobalEnv = R_GlobalEnv;
+    RConstants->EmptyEnv = R_EmptyEnv;
+    RConstants->BaseEnv = R_BaseEnv;
+    RConstants->InputHandlers = R_InputHandlers;
+    RConstants->UnboundValue  = R_UnboundValue ;
   }
 }

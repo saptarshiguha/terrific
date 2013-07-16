@@ -1,46 +1,6 @@
-fns <- sapply(0:5,function(a) sprintf("doTerraFunc%s",a))
-
-
-doTerraFile <- function(p){
-  x <- .Call("terraDoFile",p)
-  if(is.character(x)) stop(sprintf("[Terrific Error]: %s",x)) else x
-}
-doTerra <- function(f,...,table=NULL){
-  l <- list(...)
-  .Call(fns[[length(l)+1]],f,table,...)
-}
-doTerraString <- function(s){
-  .Call("terraDoString",s)
-}
-##' @param includes is a vector of include directories
-##' @param libraries path to libraries to load, rterra automaticall includes its own library
-##' @return TRUE upon success, error if it fails
-init <- function(includes,libraries){
-  if(missing(includes))
-    a1 <- paste(unique(list.dirs(strsplit(system("R CMD config --cppflags",intern=TRUE),"-I")[[1]][-1])),collapse=";")
-  else
-    a1 <- paste(includes,collapse=";")
-  a1 <- sprintf("%s;%s;.",a1, getwd())
-  Sys.setenv(INCLUDE_PATH=a1)
-  dyn.load("rterra.so")
-  a <- .Call("initTerrific",NULL)
-  if(is.character(a)) error(sprintf("[terrific error]: %s",a))
-  if(missing(libraries)){
-    ## maybe works for Linux, probably not Mac ...
-    v1 <-  strsplit(system("R CMD config --ldflags",intern=TRUE)," ")[[1]]
-    libraries <- sprintf("%s/lib%s.so",strsplit(v1[1],"-L")[[1]][2],strsplit(v1[2],"-l")[[1]][2])
-  }
-  doTerraFile(normalizePath("base.t"))
-  libraries <- c(libraries, normalizePath("./rterra.so"))
-  .Call("initLibraryLoad",NULL,"___startit",libraries)
-  TRUE
-}
-
-res0 <- init()
-res1 <- doTerraString("terralib.require('typesandfunctions')")
-
-## Example Tests
-res2 <- doTerraFile(normalizePath("./tests.t"))
+library(rterra)
+tinit()
+terraFile(system.file("exampes","tests.t",package="rterra"))
 
 cat("Tests Start Now\n")
 #### Environment Test
@@ -115,7 +75,9 @@ cat("Tests Start Now\n")
 ## ########################
 ## Test QT
 ## ########################
-doTerraFile(normalizePath("qt.initialize.terra"))
-doTerra("qtinit")
+terraFile(system.file("examples","qt.initialize.terra",package="rterra"))
+terra("qtinit")
+terraFile(system.file("examples","example.window.qt.lua",package="rterra"))
+
 doTerraFile(normalizePath("example.window.qt.lua"))
-a <- doTerra("doTest2",NULL)
+a <- terra("doTest2",NULL)

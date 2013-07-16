@@ -1,6 +1,7 @@
 terralib.require("typesandfunctions")
 
-function testNameSpace(p)
+ttests = {}
+function ttests.testNameSpace(p)
    local myNS = R.asEnvironment(p)
    local globalenv = R.asEnvironment()
    R.print(globalenv["foo"])
@@ -8,18 +9,18 @@ function testNameSpace(p)
 end
 
 
-function makeIntegerVector()
+function ttests.makeIntegerVector()
    local z = R.newInteger{init = {0,21,3,R.constants.NaLOGICAL}}
    z[0] = 31 + z[1]
    return z.sexp
 end
 
-function makeIntegerVector2(p)
+function ttests.makeIntegerVector2(p)
    local z = R.newInteger{fromSexp = p}
    z[0] = 31
 end
 
-function intVectorWithAttr(p,n)
+function ttests.intVectorWithAttr(p,n)
    local z = R.newInteger{fromSexp = p}
    stdio.printf("Printing the attribute ... ")
    R.print(z:getAttr("foo"))
@@ -33,13 +34,13 @@ function intVectorWithAttr(p,n)
    end
 end
 
-function makeLogicalVector()
+function ttests.makeLogicalVector()
    local z = R.newLogical{init = {0,2,3,R.constants.NaLOGICAL}}
    return z
 end
 
 require("io")
-function matrixTest(s)
+function ttests.matrixTest(s)
    local m = R.newReal{fromSexp = s}
    local mview = R.asMatrix(m)
    for j=0, mview.ncols - 1 do
@@ -51,7 +52,7 @@ function matrixTest(s)
 end
 
 
-function createVector()
+function ttests.createVector()
    local runif=R.makeRFunction("runif",3,R.getNamespace("stats"))
    local m = R.newVector{length = 4}
    m[0] =  R.newReal{init = {1,2}}.sexp
@@ -63,3 +64,4 @@ end
 
 
 
+return ttests
