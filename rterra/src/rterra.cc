@@ -146,11 +146,33 @@ extern "C" {
     return(R_NilValue);
   }
 
+  // void freeLua(SEXP a){
+  //   printf("Freeing the Lua bastard\n");
+  //   lua_pushlightuserdata(L, (void *)a);
+  //   lua_pushnil(L);
+  //   lua_settable(L, LUA_REGISTRYINDEX);
+  // }
+  
+  // SEXP wrapOn(){
+  //     if(lua_isnoneornil (L,-1))
+  // 	Rf_error("[terrific] Wrap nothing? I will not!");
+  //     void *res = lua_topointer(L,-1);
+  //     SEXP a = R_MakeExternalPtr(res,R_NilValue,NULL);
+  //     lua_pushlightuserdata(l, (void*)a);
+  //     lua_pushvalue(l, -2);
+  //     lua_settable(L, LUA_REGISTRYINDEX);
+  //     Rf_protect(a);
+  //     Rf_RegisterCFinalizerEx(a, freeLua,1);
+  //     Rf_unprotect(1);
+  //     printf("Protecting the Lua bastard\n");
+  //     return(a);
+  // }
+  
   void setFunction(SEXP _n, SEXP tb){
     if(tb!=R_NilValue) {
       lua_getglobal(L, CHAR(STRING_ELT(tb,0)));
       if(lua_isnoneornil (L,-1))
-	Rf_error("There was an error looking up the table");
+	Rf_error("[terrific] There was an error looking up the table");
       lua_getfield(L,-1,CHAR(STRING_ELT(_n,0)));
     }else lua_getglobal(L,CHAR(STRING_ELT(_n,0)));
   }
@@ -255,9 +277,8 @@ extern "C" {
     UNPROTECT(2);
     return(ans);
   }
-  // SEXP getGlobalEnv(){
-  //   return R_GlobalEnv;
-  // }
+
+  
   int type(SEXP o){
     return TYPEOF(o);
   }

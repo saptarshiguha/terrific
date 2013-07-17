@@ -24,6 +24,7 @@ tinit <- function(includes,libraries){
   res = terraAddRequirePaths(system.file("tcodes",package="rterra"))
   terraAddRequirePaths(system.file("examples",package="rterra"))
   terraStr("terralib.require('typesandfunctions')")
+  terraStr("terralib.require('callterra')")
   terraFile(system.file("examples","tests.t",package="rterra"))
   TRUE
 }
@@ -38,7 +39,7 @@ fns <- sapply(0:10,function(a) sprintf("doTerraFunc%s",a))
 ##' @seealso \code{\link{terra}},\code{\link{terraStr}}
 ##' @export
 terraFile <- function(filename){
-  x <- .Call("terraDoFile",filename)
+  x <- .Call("terraDoFile",normalizePath(filename))
   if(is.character(x)) stop(sprintf("[terrific]: %s",x)) else x
 }
 

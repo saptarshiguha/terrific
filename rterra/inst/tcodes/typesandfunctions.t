@@ -4,6 +4,9 @@ Rbase   = terralib.includecstring [[
 ]]
 function Rbase.ptable(w)   for key,value in pairs(w) do print(key,value) end end
 
+Rbase.malloc = stdlib.malloc
+Rbase.free = stdlib.free
+
 R = {}
 R.types = { NILSXP              = 0, SYMSXP		= 1, LISTSXP		= 2,	
 	    CLOSXP		= 3, ENVSXP		= 4, PROMSXP		= 5,	
@@ -85,6 +88,10 @@ R.getNamespace  = terra(name : &int8)
    return getNamespace(Rbase.Rf_ScalarString(Rbase.Rf_mkChar(name)))
 end
 
+terra R.evalStr(q : &int8): R.SEXP
+   return Rbase.rexpress(q)
+end
+
 terra R.makeXtnlPtr(data : &uint8, finalizer: R.SEXP -> {} ,info: R.SEXP)
    var a = Rbase.R_MakeExternalPtr(data,R.constants.NilValue,info)
    Rbase.Rf_protect(a)
@@ -142,13 +149,15 @@ local emt =  {
 }
 R.asEnvironment = ffi.metatype(asEnvironment:cstring(),emt)
 
+
 -- attributes
-R.getAttr = function(obj, attr)
+local getAttr = function(obj, attr)
    return Rbase.Rf_getAttrib(obj.sexp,Rbase.Rf_install(attr))
 end
-R.setAttr = function(obj, attr,value)
+local setAttr = function(obj, attr,value)
    Rbase.Rf_setAttrib(obj.sexp,Rbase.Rf_install(attr),value)
 end
+
 -- Generate Code for INTEGER, DOUBLE, COMPLEX, LOGICAL
 -- for a in simpletypes do
 
@@ -188,25 +197,25 @@ for _,ty in pairs(a) do
 	 if not fromSexp == false then
 	    if copy == true then
 	       local sexp = Rbase.Rf_duplicate( fromSexp )
-	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), Rbase.LENGTH(sexp),ty.rtype,R.getAttr,R.setAttr)
+	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), Rbase.LENGTH(sexp),ty.rtype,getAttr,setAttr)
 	       ffi.gc(w.sexp,R.release)
 	       R.preserve(w.sexp)
 	       return w
 	    else
-	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, ty.ptr(fromSexp), Rbase.LENGTH(fromSexp),ty.rtype,R.getAttr,R.setAttr)
+	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, ty.ptr(fromSexp), Rbase.LENGTH(fromSexp),ty.rtype,getAttr,setAttr)
 	       return w
 	    end
 	 end
 	 if length >0 then
 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, length)
-	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), length,ty.rtype,R.getAttr,R.setAttr)
+	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), length,ty.rtype,getAttr,setAttr)
 	    ffi.gc(w.sexp,R.release)
 	    R.preserve(w.sexp)
 	    return w
 	 end
 	 if #init >0 then
 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
-	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), #init,ty.rtype,R.getAttr,R.setAttr)
+	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), #init,ty.rtype,getAttr,setAttr)
 	    ffi.gc(w.sexp,R.release)
 	    R.preserve(w.sexp)
 	    for i=1,#init do
@@ -219,8 +228,17 @@ for _,ty in pairs(a) do
    R[ "new" .. ty.name ] = ffi.metatype( t[ "Array" .. ty.name ]:cstring(),emt)
 end
 
-R.cstring = function(d) return Rbase.mychar(d) end
-R.asString = function(d) return ffi.string(Rbase.mychar(d)) end
+-- R.cstring = function(d) return Rbase.mychar(d) end
+-- R.asString = function(d) return ffi.string(Rbase.mychar(d)) end
+
+R.cstr  = terra(v: R.SEXP) : &int8
+   return Rbase.mychar(v)
+end
+R.luastr = terra(v: R.SEXP)
+   return ffi.string(Rbase.mychar(v))
+end
+
+
 -- Generate Code for STRING, VECTOR
 local a = { {
 	       name = "String",rtype = R.types.STRSXP,
@@ -243,7 +261,7 @@ local a = { {
 initInitializer = {}
 initInitializer[R.types.STRSXP] = function(ty,init)
    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
-   local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,R.getAttr,R.setAttr)
+   local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,getAttr,setAttr)
    ffi.gc(w.sexp,R.release)
    R.preserve(w.sexp)
    for i=1,#init do
@@ -254,7 +272,7 @@ end
 
 initInitializer[R.types.VECSXP] = function(ty,init)
    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
-   local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,R.getAttr,R.setAttr)
+   local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,getAttr,setAttr)
    ffi.gc(w.sexp,R.release)
    R.preserve(w.sexp)
    local names = {}
@@ -302,18 +320,18 @@ for _,ty in pairs(a) do
 	 if not fromSexp == false then
 	    if copy == true then
 	       local sexp = Rbase.Rf_duplicate( fromSexp )
-	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, Rbase.LENGTH(sexp),ty.rtype,R.getAttr,R.setAttr)
+	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, Rbase.LENGTH(sexp),ty.rtype,getAttr,setAttr)
 	       ffi.gc(w.sexp,R.release)
 	       R.preserve(w.sexp)
 	       return w
 	    else
-	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, Rbase.LENGTH(fromSexp),ty.rtype,R.getAttr,R.setAttr)
+	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, Rbase.LENGTH(fromSexp),ty.rtype,getAttr,setAttr)
 	       return w
 	    end
 	 end
 	 if length >0 then
 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, length)
-	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, length,ty.rtype,R.getAttr,R.setAttr)
+	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, length,ty.rtype,getAttr,setAttr)
 	    ffi.gc(w.sexp,R.release)
 	    R.preserve(w.sexp)
 	    return w
