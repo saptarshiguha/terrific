@@ -1,15 +1,27 @@
+##' Gets clangs builtin paths
+##' @param clangccp path to clang/clang++ binary
+##' @return path
+##' @export
+getClangPath <- function(clangcpp){
+  fi <- system.file("cheaders","dummy.c",package="rterra")
+  a1 <- system(sprintf("%s '-###' -c %s 2>&1 ",clangcpp,fi),intern=TRUE)
+  rd <- which(grepl("resource-dir",v<-strsplit(gsub(' ','\n',paste(a1,collapse="\n")),"\n")[[1]]))
+  sprintf("%s/include",normalizePath(gsub('"',"",v[rd+1])))
+}
+
 ##' initializes the terra subsystem
+##' @param clang path to clang/clang++ binary
 ##' @param includes is a vector of include directories
 ##' @param libraries path to libraries to load
 ##' @return TRUE upon success, error if it fails
 ##' @export
-tinit <- function(includes,libraries){
+tinit <- function(clang="clang",includes,libraries){
   if(missing(includes))
     a1 <- paste(c(  system.file("cheaders",package="rterra"),processCppFlags(system("R CMD config --cppflags",intern=TRUE))),collapse=";")
   else
     a1 <- paste(includes,collapse=";")
 
-  a1 <- sprintf("%s;%s;.",a1, getwd())
+  a1 <- sprintf("%s;%s;%s;.",getClangPath(clang),a1, getwd())
   Sys.setenv(INCLUDE_PATH=a1)
   a <- .Call("initTerrific",NULL)
   if(is.character(a)) error(sprintf("[terrific error]: %s",a))
@@ -120,8 +132,9 @@ terraLinkLibrary <- function(libs){
   }
 }
 
+F <- function(s) gsub(" +","",s)
 .processCppFlags <- function(s){
-  (unique(list.dirs(strsplit(s,"-I")[[1]][-1])))
+  (unique(list.dirs( F(strsplit(s,"-I")[[1]][-1]))))
 }
 ##' Extract C include paths
 ##' helper function to add libraries to terra given a string output from pkg-config and it's likes
@@ -133,12 +146,12 @@ processCppFlags <- function(cppflags){
 }
 
 .processLibFlags <- function(l){
-  v1 <-  strsplit(strsplit(l," ")[[1]],"-l")
-  unlist(lapply(v1,function(i){
+  v1 <-  F(strsplit(strsplit(l," ")[[1]],"-l"))
+  a <- unlist(lapply(v1,function(i){
     if(length(i)>=2){
       sprintf("lib%s.so",i[[2]])
     }
-  }))
+  }));a
 }
 ##' Extract libraries from link flags
 ##'  helper function to add libraries to terra given a string output from pkg-config and it's likes

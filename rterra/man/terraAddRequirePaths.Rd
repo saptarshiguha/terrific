@@ -29,7 +29,8 @@
   require will return the result of calling
   terralib.loadfile on the file. By default, terralib.path
   is set to the environment variable TERRA_PATH or the
-  value "?.t" if TERRA_PATH is not set.
+  value "?.t" if TERRA_PATH is not set. This functions
+  "?.t" to every path in modulenames
 }
 \seealso{
   \code{\link{terraAddIncludePaths}},\code{\link{terraLinkLibrary}}

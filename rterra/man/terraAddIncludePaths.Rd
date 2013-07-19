@@ -14,6 +14,7 @@
   Adds include paths to the terra system
 }
 \seealso{
-  \code{\link{terraAddRequirePaths}},\code{\link{terraLinkLibrary}}
+  \code{\link{terraAddRequirePaths}},\code{\link{terraLinkLibrary}},and
+  \code{\link{processCppFlags}}
 }
 

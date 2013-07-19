@@ -19,6 +19,7 @@
   not specify the full path name
 }
 \seealso{
-  \code{\link{terraAddIncludePaths}},\code{\link{terraAddRequirePaths}}
+  \code{\link{terraAddIncludePaths}},\code{\link{terraAddRequirePaths}},\code{\link{processCppFlags}}
+  and \code{\link{processLibFlags}}
 }
 

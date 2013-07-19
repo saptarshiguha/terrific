@@ -17,7 +17,7 @@ Similar to R's .Call command, this calls a terra/lua function}
 \value{
   for this to return anything, the function called must
   return an R object (or a lua object wrapped in an R
-  external pointer)
+  external pointer,but be careful of Lua's gc)
 }
 \description{
   Runs a terra/lua function Similar to R's .Call command,

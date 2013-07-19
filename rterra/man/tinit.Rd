@@ -2,9 +2,11 @@
 \alias{tinit}
 \title{initializes the terra subsystem}
 \usage{
-  tinit(includes, libraries)
+  tinit(clang, includes, libraries)
 }
 \arguments{
+  \item{clang}{path to clang/clang++ binary}
+
   \item{includes}{is a vector of include directories}
 
   \item{libraries}{path to libraries to load}

@@ -1,7 +1,19 @@
 require 'qtcore'
 require 'qtgui'
+require 'qtnetwork'
+require 'qtxml'
+require 'qtwebkit'
+require 'qtopengl'
+require 'qtsql'
+require 'qtsvg'
+require 'qtuitools'
+require 'qtxmlpatterns'
+
+
 pthread = terralib.includec("pthread.h")
-terralib.linklibrary("libQtCore.so")
+for _,a in pairs({"libQtCore.so","libQtGui.so","libQtNetwork.so","libQtXml.so","libQtWebKit.so","libQtOpenGL.so","libQtSql.so","libQtSvg.so","libQtXmlPatterns.so"}) do
+   terralib.linklibrary(a)
+end
 
 rqt = {}
 
@@ -13,20 +25,20 @@ rqt.App = nil
 function rqt.processQTEvents(x)
    QCoreApplication.processEvents()
 end
-terra rqt.QTEventLoopHandler(data : &uint8)
+terra rqt.QTEventLoopHandler(data : &opaque)
    var buf : uint8[16]
-   unistd.read(ifd,buf,16)
+   unistd.read(ifd,[&uint8](buf),16)
    rqt.processQTEvents()
    fired=0
 end
-terra rqt.mywriter(data : &uint8) : &uint8
+terra rqt.mywriter(data : &opaque) : &opaque
    var buf : uint8[16];
    while true do
       unistd.usleep(10000)
       if fired == 0  then
 	 fired = 1
 	 buf[0]=0
-	 var s = unistd.write(ofd, buf, 1);
+	 var s = unistd.write(ofd, [&uint8](buf), 1);
       end
    end
 end

@@ -1,3 +1,4 @@
+export(getClangPath)
 export(processCppFlags)
 export(processLibFlags)
 export(terra)
