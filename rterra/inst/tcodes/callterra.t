@@ -330,9 +330,11 @@ Rt.ListVector = struct
 }
 
 local getWhat = function(c)
-   if type(c) == "userdata" then
+   local tt = type(c)
+   if tt == "userdata"  then
       return  c
    elseif c.sexp ~= nil then
+      -- Robj returns cdata ...
       return c.sexp
    end
 end
