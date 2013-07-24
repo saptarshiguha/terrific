@@ -23,9 +23,9 @@ terra freegsl_rng(r : &gsl.gsl_rng )
 end
 
 function doGibbsJIT(p)
-   local p1 = R.newInteger{fromSexp = p}
+   local p1 = R.Robj(p)
    local N,thin = p1[0], p1[1]
-   local r = R.newReal{length = N*2}
+   local r = R.Robj{type='real',length = N*2}
    local mr = R.asMatrix(r, {N,2})
    local rng =  initgsl_rng()
    for i=0,N-1 do
@@ -66,13 +66,13 @@ end
 
 _doGibbsTerra:compile()
 function doGibbsTerra(p)
-   local p1 = R.newInteger{fromSexp = p}
+   local p1 = R.Robj(p)
    local N,thin = p1[0], p1[1]
-   local r = R.newReal{length = N*2}
+   local r = R.Robj{type='real',length = N*2}
    _doGibbsTerra( r.ptr, N,thin)
    return r
 end
--- pkg-config glib-2.0 --cflags
+-- pkg-config glib-2.0 --cflags and libs
 linuxtype = "Ubuntu"
 if linuxtype == nil or linuxtype == "Ubuntu" then 
    terralib.includepath = terralib.includepath .. ";/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include"
@@ -120,10 +120,10 @@ terra _doGibbsTerra1(r:&double, N:int, thin:int ,numthreads:int)
 end
 _doGibbsTerra1:compile()
 function doGibbsTerraParallel(p,nt)
-   local p1 = R.newInteger{fromSexp = p}
+   local p1 = R.Robj(p)
    local N,thin = p1[0], p1[1]
-   local r = R.newReal{length = N*2}
-   _doGibbsTerra1( r.ptr, N,thin, R.newInteger{fromSexp=nt}[0])
+   local r = R.Robj{type='real',length = N*2}
+   _doGibbsTerra1( r.ptr, N,thin, R.Robj(nt)[0])
    return r
 end
 

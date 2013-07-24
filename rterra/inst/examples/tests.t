@@ -5,14 +5,14 @@ function ttests.testNameSpace(p)
    local myNS = R.asEnvironment(p)
    local globalenv = R.asEnvironment()
    R.print(globalenv["foo"])
-   myNS["foo"] = R.newString{init={"alpha-gamma"}}.sexp
+   myNS["foo"] = R.newString{init={"alpha-gamma"}}
 end
 
 
 function ttests.makeIntegerVector()
    local z = R.newInteger{init = {0,21,3,R.constants.NaLOGICAL}}
    z[0] = 31 + z[1]
-   return z.sexp
+   return z
 end
 
 function ttests.makeIntegerVector2(p)
@@ -25,7 +25,7 @@ function ttests.intVectorWithAttr(p,n)
    stdio.printf("Printing the attribute ... ")
    R.print(z:getAttr("foo"))
    local w = R.newString{fromSexp=n}
-   local j = R.asString(w[0])
+   local j = R.luastr(w[0])
    if j == "add" then 
       z:setAttr("dooey",R.newString{init={w[1]} })
    else
@@ -58,7 +58,9 @@ function ttests.createVector()
    m[0] =  R.newReal{init = {1,2}}.sexp
    m[1] =  R.newReal{init = {2,2}}.sexp
    m[2] =  R.newReal{init = {3,2}}.sexp
-   m[3] =  runif(R.newReal{init = {10}}.sexp, R.newReal{init = {0}}.sexp, R.newReal{init={1}}.sexp)
+   m[3] =  runif(R.newReal{init = {10}}.sexp,
+		 R.newReal{init = {0}}.sexp,
+		 R.newReal{init={1}}.sexp)
    return m
 end
 

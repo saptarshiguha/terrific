@@ -66,7 +66,9 @@ terraFile <- function(filename){
 ##' @seealso \code{\link{terra}},\code{\link{terraStr}}
 ##' @export 
 terra <- function(f,...,table=NULL){
-  l <- list(...)
+  ## l <- length(match.call(expand.dots=FALSE)[[3]]) ## arg1 == terra, arg2==f
+  ## above has a problem when no ... is passed!
+  l <- (as.list(match.call(expand.dots=FALSE))[["..."]])
   .Call(fns[[length(l)+1]],f,table,...)
 }
 

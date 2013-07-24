@@ -136,9 +136,21 @@ extern "C" {
     int status= docall(L,n);
     report(L,status);
     if(!status){
+      int rt = lua_type(L,-1);
+      // printf("lua type:%d\n", lua_type (L,-1));
       const void *p = lua_topointer (L,-1);
       if(p){
-	SEXP a = (*((SEXP *)p));
+	// printf("lua ptr:%p\n",p);       
+	SEXP a;
+	if(rt == LUA_TLIGHTUSERDATA )
+	  a = (SEXP)p;
+	else if(rt == LUA_TTABLE){
+	  // printf("Table time");
+	  lua_getfield(L,-1,"sexp");
+	  a = (SEXP)(lua_topointer(L,-1));
+	  if(!a) Rf_error("[terrific error]: You are returning strange tables");
+	  // printf("Table time %p",a);
+	}else  a = (*((SEXP *)p));
 	lua_pop(L,1);
 	return(a);
       }
