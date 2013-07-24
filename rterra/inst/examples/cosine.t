@@ -9,9 +9,9 @@ end
 
 doCosineL = nil
 function doCosineL(mat0)
-   local mat = R.asMatrix(R.newReal{fromSexp = mat0})
-   local retval = R.newReal{length = mat.nrows*mat.nrows}
-   retval:setAttr("dim", R.newInteger{init = {mat.nrows, mat.nrows}}.sexp)
+   local mat = R.asMatrix(R.Rob(mat0))
+   local retval = R.Robj{type='real',length = mat.nrows*mat.nrows}
+   retval['dim']= R.Robj{type='int',with = {mat.nrows, mat.nrows}}
    local rm  = R.asMatrix(retval)
    for row1 = 0, mat.nrows-1 do
       for row2=0, mat.nrows-1 do
