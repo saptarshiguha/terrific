@@ -9,7 +9,7 @@ end
 
 doCosineL = nil
 function doCosineL(mat0)
-   local mat = R.asMatrix(R.Rob(mat0))
+   local mat = R.asMatrix(R.Robj(mat0))
    local retval = R.Robj{type='real',length = mat.nrows*mat.nrows}
    retval['dim']= R.Robj{type='int',with = {mat.nrows, mat.nrows}}
    local rm  = R.asMatrix(retval)

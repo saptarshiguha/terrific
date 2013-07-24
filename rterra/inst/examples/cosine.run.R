@@ -1,12 +1,12 @@
 library(rterra)
-tinit()
+tinit(clang="/opt/clang3.3/bin/clang")
 terraStr('terralib.includepath = terralib.includepath .. ";/usr/local/include/glib-2.0;/usr/local/lib/glib-2.0/include"')
-terraStr("dotrace='yes'")
+terraStr("dotrace='no'")
 terraFile(system.file("examples","cosine.t",package="rterra"))
 
 
-N=800;m <- matrix(as.numeric(1:N^2),ncol=N)
-R = 1
+N=1500;m <- matrix(as.numeric(1:N^2),ncol=N)
+R = 5
 
 tl <- data.frame(type="luajit",time=replicate(R,{
 ;invisible(gc());  system.time(y5dist <- terra("doCosineL",m))
