@@ -229,6 +229,9 @@ for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
 	    setAttr(a, b,c) -- c must be a sexp!
 	 end
       end,
+      __len = function(a)
+	 return a.length
+      end,
       __new = function(ct,...)
 	 local args = ...
 	 local jj,ll
@@ -286,6 +289,9 @@ local emt = {
       else
 	 return getAttr(a, b)
       end
+   end,
+   __len = function(a)
+	 return a.length
    end,
    __newindex =function(a,b,c)
       if type(b) == "number" then
@@ -346,6 +352,9 @@ local emt = {
       else
 	 return getAttr(a, b)
       end
+   end,
+   __len = function(a)
+	 return a.length
    end,
    __newindex =function(a,b,c)
       if type(b) == "number" then

@@ -6,10 +6,22 @@ local window = QGraphicsView.new()
 local pen,brush,font=QPen.new(),QBrush.new(),QFont.new()
 window:setRenderHints({"Antialiasing","SmoothPixmapTransform"})
 
+function makeQPoly(a,b)
+   if a.length ~= b.length then
+      error("Two vectors to makePoly must be of equal length")
+   end
+   local m = QPolygonF()
+   for i = 0, a.length-1  do
+      m:IN(QPointF( a[i],b[i]))
+   end
+   return m
+end
+
 function plotData3(a)
    local scene = QGraphicsScene.new()
    local aa = R.Robj(a)
    for i = 0,aa.length-1 do
+      -- switch to hashtable lookup ..
       local plotElement = aa[i]
       local plotType = ffi.string(plotElement[0][0])
       if plotType == "circle" then
@@ -24,8 +36,21 @@ function plotData3(a)
 	 local rot = plotElement[4][0]
 	 local txt =  ffi.string(plotElement[1][0])
 	 local m = scene:addText(txt, font)
+	 m:setTextInteractionFlags({"TextEditable"})
 	 m:setPos(x,y)
 	 m:setRotation(-rot)
+      elseif plotType == "rect" then
+	 local x,y = plotElement[1][0], makeQPolyplotElement[2][0]
+	 local w,h = plotElement[3][0] ,plotElement[4][0]
+	 scene:addRect(x,y,w,h)
+      elseif plotType == "polygon" then
+	 local poy = makePoly(plotElement[1],plotElement[2])
+	 scene:addPolygon( poy, pen, brush)
+      elseif plotType == "polyline" then
+	 local poy = makePoly(plotElement[1],plotElement[2])
+	 local py = QPainterPath()
+	 py:addPolygon(poy)
+	 scene:add(py)
       end
    end
    window:setScene(scene)

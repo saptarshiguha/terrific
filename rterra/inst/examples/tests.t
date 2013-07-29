@@ -1,4 +1,6 @@
 terralib.require("typesandfunctions")
+terralib.require("callterra")
+
 -- WRONG API
 
 ttests = {}
@@ -6,7 +8,7 @@ function ttests.testNameSpace(p)
    local myNS = R.Robj(p)
    local globalenv = R.Robj(R.constants.GlobalEnv)
    R.print(globalenv["foo"])
-   myNS["foo"] = R.Robj{type='str',with={"alpha-gamma"}}
+   myNS["foo"] ="alpha-gamm"
 end
 
 

@@ -170,7 +170,12 @@ local emt =  {
    end,
    __newindex =  function(tabl, key, value)
       -- local v = value.sexp or value
-      R.defineVariable(key,value,tabl.sexp)
+      if type(value) == "string" then
+	 value = Rbase.Rf_ScalarString(Rbase.Rf_mkChar(value))
+	 R.defineVariable(key,value,tabl.sexp)
+      else
+	 R.defineVariable(key,value.sexp,tabl.sexp)
+      end
    end,
    __new = function(ct,p)
       if p == nil then
