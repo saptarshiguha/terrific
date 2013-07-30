@@ -19,15 +19,15 @@ function ttests.makeIntegerVector()
    return z
 end
 
-
-
 function ttests.intVectorWithAttr(p,n)
    local z = R.Robj(p)
    stdio.printf("Printing the attribute ... ")
    R.print(z['foo'])
-   local w = R.RObj(n)
-   local g = R.RObj{type='str',with={ w[2] }}
+   local w = R.Robj(n)
+   local g = R.Robj{type='str',with={  w[1] }}
+   z['listattr'] = R.Robj{type='list',with={w,w}}
    z['dooey'] = g
+   return z
 end
 
 function ttests.makeLogicalVector()

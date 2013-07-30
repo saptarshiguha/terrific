@@ -44,13 +44,13 @@ function plotData3(a)
 	 local w,h = plotElement[3][0] ,plotElement[4][0]
 	 scene:addRect(x,y,w,h)
       elseif plotType == "polygon" then
-	 local poy = makePoly(plotElement[1],plotElement[2])
+	 local poy = makeQPoly(plotElement[1],plotElement[2])
 	 scene:addPolygon( poy, pen, brush)
       elseif plotType == "polyline" then
-	 local poy = makePoly(plotElement[1],plotElement[2])
-	 local py = QPainterPath()
+	 local poy = makeQPoly(plotElement[1],plotElement[2])
+	 local py = QPainterPath.new()
 	 py:addPolygon(poy)
-	 scene:add(py)
+	 -- scene:addPath(py)
       end
    end
    window:setScene(scene)

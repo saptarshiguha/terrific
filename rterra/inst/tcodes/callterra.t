@@ -272,11 +272,20 @@ local qtype = function(j)
    if type(j) == "string" then
       return "string"
    else
-      return Rbase.TYPEOF(j)
+      local z = terralib.typeof(j)
+      if z.name == "&SEXPREC" then 
+	 return Rbase.TYPEOF(j)
+      else
+	 return z.name
+      end
    end
 end
 local convert = { string = function(d) return Rbase.Rf_mkChar(d) end}
 convert[R.types.CHARSXP] = function(d) return d end
+convert[R.types.STRSXP] = function(d) return Rbase.STRING_ELT(d,0) end
+convert["&int8"] = function(d)
+   return   Rbase.Rf_mkChar(ffi.string(d))
+end
 
 local emt = {
    __index  = function(a,b)
