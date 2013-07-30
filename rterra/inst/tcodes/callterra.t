@@ -234,13 +234,14 @@ for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
       end,
       __new = function(ct,...)
 	 local args = ...
-	 local jj,ll
+	 local jj,ll,X
 	 if type(args) == "table" then
-	    if args.with ~= nil then
-	       ll = #args.with
+	    if args.with ~= nil or args.init ~=nil then
+	       X = args.with or args.init
+	       ll = #X
 	       jj = Rbase.Rf_allocVector(args.type,ll)
 	       for i=1,ll do
-		  tp[2](jj)[i-1] = args.with[i]
+		  tp[2](jj)[i-1] =X[i]
 	       end
 	    elseif args.length ~= nil then
 	       ll = args.length
@@ -302,13 +303,14 @@ local emt = {
    end,
    __new = function(ct,...)
       local args = ...
-      local jj,ll
+      local jj,ll,X
       if type(args) == "table" then
-	 if args.with ~= nil then
-	    ll = #args.with
+	 if args.with ~= nil or args.init ~= nil then
+	    X = args.with or args.init
+	    ll = #X
 	    jj = Rbase.Rf_allocVector(R.types.STRSXP,ll)
 	    for i=1,ll do
-	       local c = args.with[i]
+	       local c =X[i]
 	       Rbase.SET_STRING_ELT(jj, i-1, convert[ qtype(c) ](c))
 	    end
 	 elseif args.length ~= nil then
@@ -365,13 +367,14 @@ local emt = {
    end,
    __new = function(ct,...)
       local args = ...
-      local jj,ll
+      local jj,ll,X
       if type(args) == "table" then
-	 if args.with ~= nil then
-	    ll = #args.with
+	 if args.with ~= nil or args.init ~=nil then
+	    X = args.with or args.init
+	    ll = #X
 	    jj = Rbase.Rf_allocVector(R.types.VECSXP,ll)
 	    for i=1,ll do
-	       local c = args.with[i]
+	       local c = X[i]
 	       Rbase.SET_VECTOR_ELT(jj, i-1, getWhat(c))
 	    end
 	 elseif args.length ~= nil then
@@ -412,7 +415,7 @@ for a,b in pairs(R.types) do lookup.number[b] = b end
 
 R.Robj = function(o,...)
    if type(o) == 'table' then
-      o.type = lookup[ type(o.type)][o.type] 
+      o.type = lookup[ type(o.type)][o.type]
       return methods[ o.type ] (o)
    else
       return methods[Rbase.TYPEOF(o)](o)
