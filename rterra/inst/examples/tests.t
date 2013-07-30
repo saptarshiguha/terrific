@@ -13,7 +13,7 @@ end
 
 
 function ttests.makeIntegerVector()
-   local z = R.Robj{type="int",init = {0,21,3,R.constants.NaLOGICAL}}
+   local z = R.Robj{type="int",with = {0,21,3,R.constants.NaLOGICAL}}
    z[0] = 31 + z[1]
    z['whoami'] = "integer vector"
    return z
@@ -25,8 +25,8 @@ function ttests.intVectorWithAttr(p,n)
    local z = R.Robj(p)
    stdio.printf("Printing the attribute ... ")
    R.print(z['foo'])
-   local w = R.asRObj(n)
-   local g = R.asRObj{type='str',with={ w[2] }}
+   local w = R.RObj(n)
+   local g = R.RObj{type='str',with={ w[2] }}
    z['dooey'] = g
 end
 
