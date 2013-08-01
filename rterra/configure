@@ -2,7 +2,7 @@
 cd src
 if [ ! -d "terra" ]; then
     echo "\n[rterra] Cloning The Terra Repository from GitHub"
-    git clone https://github.com/zdevito/terra.git
+    git clone http://github.com/zdevito/terra.git
 fi
 cd terra
 echo "\n[rterra] Using your LLVM_CONFIG(current:= ${LLVM_CONFIG})  environment variable for llvm-config location"
