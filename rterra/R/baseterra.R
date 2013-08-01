@@ -23,7 +23,7 @@ tinit <- function(clang="clang",includes,libraries){
 
   a1 <- sprintf("%s;%s;%s;.",getClangPath(clang),a1, getwd())
   Sys.setenv(INCLUDE_PATH=a1)
-  a <- .Call("initTerrific",NULL)
+  a <- .Call("initTerrific",NULL,PACKAGE="rterra")
   if(is.character(a)) error(sprintf("[terrific error]: %s",a))
   if(missing(libraries)){
     ## maybe works for Linux, probably not Mac ...
@@ -32,7 +32,7 @@ tinit <- function(clang="clang",includes,libraries){
   bp <- system.file("tcodes","base.t",package="rterra")
   res <- terraFile(bp)
   libraries <- c(libraries,  system.file("libs","rterra.so",package="rterra"))
-  .Call("initLibraryLoad",NULL,"___startit",libraries)
+  .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
   res = terraAddRequirePaths(system.file("tcodes",package="rterra"))
   terraAddRequirePaths(system.file("examples",package="rterra"))
   terraStr("terralib.require('typesandfunctions')")
@@ -51,7 +51,7 @@ fns <- sapply(0:10,function(a) sprintf("doTerraFunc%s",a))
 ##' @seealso \code{\link{terra}},\code{\link{terraStr}}
 ##' @export
 terraFile <- function(filename){
-  x <- .Call("terraDoFile",normalizePath(filename))
+  x <- .Call("terraDoFile",normalizePath(filename),PACKAGE="rterra")
   if(is.character(x)) stop(sprintf("[terrific]: %s",x)) else x
 }
 
@@ -69,7 +69,7 @@ terra <- function(f,...,table=NULL){
   ## l <- length(match.call(expand.dots=FALSE)[[3]]) ## arg1 == terra, arg2==f
   ## above has a problem when no ... is passed!
   l <- (as.list(match.call(expand.dots=FALSE))[["..."]])
-  .Call(fns[[length(l)+1]],f,table,...)
+  .Call(fns[[length(l)+1]],f,table,...,PACKAGE="rterra")
 }
 
 ##' Evaluates a terra string
@@ -78,7 +78,7 @@ terra <- function(f,...,table=NULL){
 ##' @seealso \code{\link{terra}},\code{\link{terraFile}}
 ##' @export 
 terraStr <- function(s){
-  a <- .Call("terraDoString",s)
+  a <- .Call("terraDoString",s,PACKAGE="rterra")
   if(is.character(a)) stop(sprintf("[terrific]: %s",a))
 }
 
