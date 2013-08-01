@@ -23,26 +23,23 @@ fi
 
 echo "\n[rterra] Making Terra Shared Library"
 cat Makefile.inc
-## sed escapes me ...
+## sed escapes me ... or not this time
 sed -i 's/(cd $(LUAJIT_DIR); make CC=$(CC))/(cd $(LUAJIT_DIR); make STATIC_CC="$(CC) -fPIC" CC=$(CC))/' Makefile
 make build/libterra.so
 
 
 
-echo "[terra] Copying required libraries to (do you have LUAJIT installed???)"
+echo "[rterra] Copying required libraries"
 MDEST=../
-# build/libterra.s
-# cp  build/libterra.so src/terra.h src/tcuda.h $MDEST
+
 cp   build/libterra.so src/terra.h src/tcuda.h $MDEST
 
 for x  in lauxlib.h  luaconf.h  lua.h  lua.hpp  luajit.h  lualib.h  libluajit.a
 do
-    cp build/LuaJIT-2.0.1/src/$x $MDEST
+    cp build/LuaJIT-*/src/$x $MDEST
 done
 cd ..
 
 
-# cp /home/sguha/dev/terra/build/libterra.so ./
-# sudo chown root libterra.so
 
 

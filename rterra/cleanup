@@ -5,6 +5,5 @@ rm src/lauxlib.h
 rm src/terra.h
 rm src/tcuda.h
 rm src/lua.hpp
-rm src/libluajit-5.1.so.2
-rm src/libluajit.a
+rm src/libluajit-*
 rm -rf src/terra
