@@ -5,9 +5,9 @@
 
 
 extern "C" {
-  const gsl_rng_type* get_mt19937(){
-    return gsl_rng_mt19937;
-  }
+  // const gsl_rng_type* get_mt19937(){
+  //   return gsl_rng_mt19937;
+  // }
   SEXP doGibbs(SEXP p){
     int N=INTEGER(p)[0];
     int thin=INTEGER(p)[1];

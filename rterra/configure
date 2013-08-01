@@ -1,0 +1,48 @@
+#!/bin/sh
+cd src
+if [ ! -d "terra" ]; then
+    echo "\n[rterra] Cloning The Terra Repository from GitHub"
+    git clone https://github.com/zdevito/terra.git
+fi
+cd terra
+echo "\n[rterra] Using your LLVM_CONFIG(current:= ${LLVM_CONFIG})  environment variable for llvm-config location"
+echo "[rterra] Also checking for ENABLE_CUDA=1 or 0 for CUDA usage, if set,  set CUDA_HOME"
+ENABLE_CUDA=$ENABLE_CUDA
+cat << EOF > Makefile.inc
+LLMV_CONFIG="$LLVM_CONFIG"
+EOF
+if [ "$ENABLE_CUDA" = "1" ]; then
+    if [ -z "$CUDA_HOME" ]; then
+	echo "[rterra WARNING]: You have ENABLE_CUDA set to 1 but CUDA_HOME is empty, terra will use defaults"
+    fi
+    cat << EOF >> Makefile.inc
+ENABLE_CUDA=$ENABLE_CUDA
+CUDA_HOME=$CUDA_HOME
+EOF
+fi
+
+echo "\n[rterra] Making Terra Shared Library"
+cat Makefile.inc
+## sed escapes me ...
+sed -i 's/(cd $(LUAJIT_DIR); make CC=$(CC))/(cd $(LUAJIT_DIR); make STATIC_CC="$(CC) -fPIC" CC=$(CC))/' Makefile
+make build/libterra.so
+
+
+
+echo "[terra] Copying required libraries to (do you have LUAJIT installed???)"
+MDEST=../
+# build/libterra.s
+# cp  build/libterra.so src/terra.h src/tcuda.h $MDEST
+cp   build/libterra.so src/terra.h src/tcuda.h $MDEST
+
+for x  in lauxlib.h  luaconf.h  lua.h  lua.hpp  luajit.h  lualib.h libluajit.so libluajit.a
+do
+    cp build/LuaJIT-2.0.1/src/$x $MDEST
+done
+cd ..
+
+
+# cp /home/sguha/dev/terra/build/libterra.so ./
+# sudo chown root libterra.so
+
+

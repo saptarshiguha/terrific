@@ -5,8 +5,9 @@ terralib.require("typesandfunctions")
 gsl = terralib.includecstring [[
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
-const gsl_rng_type *gsl_rng_mt19937;
-const gsl_rng_type* get_mt19937();
+const gsl_rng_type* get_mt19937(){
+    return gsl_rng_mt19937;
+  }
 ]]
 
 terralib.linklibrary("libgsl.so")
@@ -28,9 +29,10 @@ function doGibbsJIT(p)
    local r = R.Robj{type='real',length = N*2}
    local mr = R.asMatrix(r, {N,2})
    local rng =  initgsl_rng()
+   local x,y = 0.0,0.0
    for i=0,N-1 do
       for j=0, thin-1 do
-   	 local x,y = 0.0,0.0
+
    	 x=gsl.gsl_ran_gamma(rng,3.0,1.0/(y*y+4));
    	 y=1.0/(x+1)+gsl.gsl_ran_gaussian(rng,1.0/cmath.sqrt(2*x+2))
    	 mr[{i,0}],mr[{i,1}] = x,y
@@ -54,9 +56,9 @@ end
 terra _doGibbsTerra(r:&double, N:int, thin:int )
    var rng : &gsl.gsl_rng = nil
    [GSL_RNG_INIT(rng)]
+   var x,y = 0.0,0.0
    for i=0,N do
       for j=0, thin do
-	 var x,y = 0.0,0.0
 	 x=gsl.gsl_ran_gamma(rng,3.0,1.0/(y*y+4));
 	 y=1.0/(x+1)+gsl.gsl_ran_gaussian(rng,1.0/cmath.sqrt(2*x+2))
 	 r[i ],r[i+N] =  x,y
@@ -97,8 +99,8 @@ terra _driver(data:glib.gpointer, userdata:glib.gpointer) : {}
    var thin = ud.thin
    
    var rng = gsl.gsl_rng_alloc([&gsl.gsl_rng_type] (gsl.get_mt19937()))
+   var x,y = 0.0,0.0
    for j=0, thin do
-      var x,y = 0.0,0.0
       x=gsl.gsl_ran_gamma(rng,3.0,1.0/(y*y+4));
       y=1.0/(x+1)+gsl.gsl_ran_gaussian(rng,1.0/cmath.sqrt(2*x+2))
       r[ i ],r[i+N] =  x,y

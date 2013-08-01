@@ -1,8 +1,7 @@
 rlib: rterra.cc
-	g++ -O3 -fPIC -c -o rterra.o rterra.cc `R CMD config --cppflags` -I/usr/local/include/luajit-2.0/ -I/usr/local/include/terra/ -I.
-	g++ -O3 -shared rterra.o -o rterra.so `R CMD config --ldflags`  -L/usr/local/lib -lluajit-5.1 -lterra 
+	g++ -O2 -fPIC -c -o rterra.o rterra.cc `R CMD config --cppflags`  -I.
+	g++ -O2 -Wl,-rpath=${R_PACKAGE_DIR}/libs -Wl,-rpath=./ -L.  -shared rterra.o  libluajit.a  -lterra    -o rterra.so  `R CMD config --ldflags`  
 
+#	g++ -O3 -Wl,-rpath=${R_PACKAGE_DIR}/libs -Wl,-rpath=./ -L.  -shared rterra.o    -lterra -lluajit   -o rterra.so  `R CMD config --ldflags`  
 
-# gibbs: gibstest.cc
-# 	g++ -O3 -fPIC -c -o gibstest.o gibstest.cc `R CMD config --cppflags` 
-# 	g++ -O3 -shared gibstest.o -o gibstest.so `R CMD config --ldflags`  -L/usr/local/lib -lgsl -lgslcblas
+# 

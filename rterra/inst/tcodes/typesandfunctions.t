@@ -82,16 +82,16 @@ function R.makeRFunction(fname, len,namespace)
    if not namespace == nil then
       local z1 = Rbase.Rf_ScalarString(Rinternals.Rf_mkChar(namespace))
       local z2 = Rbase.Rf_lang2(Rinternals.Rf_install("getNamespace"),z1)
-      nspace = Rbase.Rf_eval(z2,R.constants.GlobalEnv)
+      nspace = terralib.constant(Rbase.Rf_eval(z2,R.constants.GlobalEnv))
    else
-      nspace = R.constants.GlobalEnv
+      nspace = terralib.constant(R.constants.GlobalEnv)
    end
    local langcall = Rbase["Rf_lang" .. (len+1)]
    local fncall
    if type(fname)=="string" then
-      fncall = Rbase.Rf_install(fname)
+      fncall = terralib.constant(Rbase.Rf_install(fname))
    elseif  Rbase.TYPEOF(fname) == R.types.FUNSXP then
-      fncall = fname
+      fncall = terralib.constant(fname)
    else
       Rbase.Rf_error("What type of function did you give me?")
    end
@@ -102,8 +102,6 @@ function R.makeRFunction(fname, len,namespace)
    return
       terra([params])
          var result = Rbase.Rf_eval( langcall( fncall, [params]), nspace)
-   	 ffi.gc(result,R.release)
-   	 R.preserve(result)
    	 return result
       end
 end
