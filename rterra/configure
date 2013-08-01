@@ -35,7 +35,7 @@ MDEST=../
 # cp  build/libterra.so src/terra.h src/tcuda.h $MDEST
 cp   build/libterra.so src/terra.h src/tcuda.h $MDEST
 
-for x  in lauxlib.h  luaconf.h  lua.h  lua.hpp  luajit.h  lualib.h libluajit.so libluajit.a
+for x  in lauxlib.h  luaconf.h  lua.h  lua.hpp  luajit.h  lualib.h  libluajit.a
 do
     cp build/LuaJIT-2.0.1/src/$x $MDEST
 done
