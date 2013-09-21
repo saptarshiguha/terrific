@@ -89,7 +89,7 @@ terraStr <- function(s){
 ##' @export 
 terraAddIncludePaths <- function(paths){
   for(i in paths){
-    terraStr(sprintf('terralib.includepath = terralib.includepath .. ";%s"', i))
+    terraStr(sprintf('package.path = package.path .. ";%s"', i))
     stop(sprintf("[terrific error]: Adding path %s caused an error", i))
   }
 }
@@ -116,7 +116,7 @@ terraAddIncludePaths <- function(paths){
 ##' @export 
 terraAddRequirePaths <- function(modulenames){
   for(i in modulenames){
-    res <- terraStr(sprintf('terralib.path = terralib.path .. ";%s/?.t"', i))
+    res <- terraStr(sprintf('package.path = package.path .. ";%s/?.t"', i))
   }
 }
 
