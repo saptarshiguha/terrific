@@ -13,21 +13,25 @@ getClangPath <- function(clangcpp){
 ##' @param clang path to clang/clang++ binary
 ##' @param includes is a vector of include directories
 ##' @param libraries path to libraries to load
+##' @options if verbose >0 then lots of output and if debug>0 then line numebrs in stack traces
 ##' @return TRUE upon success, error if it fails
 ##' @export
-tinit <- function(clang="clang",includes,libraries){
+tinit <- function(clang="clang",includes,libraries,options=list(verbose=0L, debug=1L)){
   if(missing(includes))
     a1 <- paste(c(  system.file("cheaders",package="rterra"),processCppFlags(system("R CMD config --cppflags",intern=TRUE))),collapse=";")
   else
     a1 <- paste(includes,collapse=";")
 
   a1 <- sprintf("%s;%s;%s;.",getClangPath(clang),a1, getwd())
+  if(options$debug>0){
+      cat(sprintf("[terrific] INCLUDE_PATH=%s\n", a1))
+  }
   Sys.setenv(INCLUDE_PATH=a1)
-  a <- .Call("initTerrific",NULL,PACKAGE="rterra")
+  a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),PACKAGE="rterra")
   if(is.character(a)) error(sprintf("[terrific error]: %s",a))
   if(missing(libraries)){
     ## maybe works for Linux, probably not Mac ...
-    libraries <- processLibFlags(system("R CMD config --ldflags",intern=TRUE))
+      libraries <- processLibFlags(system("R CMD config --ldflags",intern=TRUE))
   }
   bp <- system.file("tcodes","base.t",package="rterra")
   res <- terraFile(bp)

@@ -23,12 +23,13 @@ extern "C" {
   }
 
 
-  SEXP newTerra(){
+  SEXP newTerra(int verbose, int debug){
     SEXP s=R_NilValue;
     lua_State *l = luaL_newstate(); //create a plain lua state
     luaL_openlibs(l);                //initialize its libraries
     //initialize the terra state in lua
-    if(terra_init(l)){
+    terra_Options t = { verbose,debug};
+    if(terra_initwithoptions(l,&t)){
       return(doerror(l));
     }
     return(s);
@@ -38,9 +39,14 @@ extern "C" {
     SEXP s=R_NilValue;
     if(!L){
       L = luaL_newstate(); //create a plain lua state
+      if(!L){
+	Rf_error("[Terrific Error] luaL_newstate returned null\n");
+	return(s);
+      }
       luaL_openlibs(L);                //initialize its libraries
       //initialize the terra state in lua
-      if(terra_init(L)){
+      terra_Options t = { INTEGER(r0)[0],INTEGER(r0)[1]};
+      if(terra_initwithoptions(L,&t)){
 	return(doerror(L));
       }
     }
@@ -252,6 +258,7 @@ extern "C" {
     return(carryOn(_n,7));
   }
 
+  
   SEXP initLibraryLoad(SEXP r1,SEXP r2,SEXP r0){
      if(r1!=R_NilValue) {
       lua_getglobal(L, CHAR(STRING_ELT(r1,0)));
@@ -296,6 +303,9 @@ extern "C" {
   }
   const char* mychar(SEXP o){
     return CHAR(o);
+  }
+  int isNaN(double f){
+    return ISNAN(f);
   }
   void getConstants(_RConstants* RConstants){
     // _RConstants *rc =(_RConstants*)malloc(sizeof( _RConstants));

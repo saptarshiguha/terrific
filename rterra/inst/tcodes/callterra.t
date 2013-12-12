@@ -257,7 +257,8 @@ for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
 	 return j
       end
    }
-   methods[tp[3]] = ffi.metatype(tp[1]:cstring(), emt)
+   tp[1].metamethods.__luametatable = emt
+   methods[tp[3]] = tp[1] --ffi.metatype(tp[1]:cstring(), emt)
 end
 
 
@@ -336,7 +337,8 @@ local emt = {
       return j
    end
 }
-methods[R.types.STRSXP] = ffi.metatype(Rt.StringVector:cstring(), emt)
+Rt.StringVector.metamethods.__luametatable = emt
+methods[R.types.STRSXP] = Rt.StringVector --fi.metatype(Rt.StringVector:cstring(), emt)
 
 
 Rt.ListVector = struct 
@@ -400,7 +402,8 @@ local emt = {
       return j
    end
 }
-methods[R.types.VECSXP] = ffi.metatype(Rt.ListVector:cstring(), emt)
+Rt.ListVector.metamethods.__luametatable = emt
+methods[R.types.VECSXP] = Rt.ListVector --ffi.metatype(Rt.ListVector:cstring(), emt)
 
 
 methods[R.types.NILSXP] = function(a) return R.constants.NilValue end
@@ -423,11 +426,14 @@ lookup.number = {}
 for a,b in pairs(R.types) do lookup.number[b] = b end
 
 R.Robj = function(o,...)
+   print(o)
+   print(type(o))
    if type(o) == 'table' then
       o.type = lookup[ type(o.type)][o.type]
-      return methods[ o.type ] (o)
+      return terralib.new(methods[ o.type ],o)
    else
-      return methods[Rbase.TYPEOF(o)](o)
+      -- return methods[Rbase.TYPEOF(o)](o)
+      return terralib.new(methods[Rbase.TYPEOF(o)],o)
    end
 end
 

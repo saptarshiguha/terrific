@@ -1,12 +1,11 @@
 Package: rterra
 Type: Package
 Title: Write extensions in Lua/Terra
-Version: 1.0
+Version: 1.1
 Date: 2013-07-15
 Author: Saptarshi Guha
 Maintainer: Saptarshi Guha <saptarshi.guha@gmail.com>
 Description: Assists programmer in writing R extensions in Lua/terra
 License: Mozilla Public License
-Collate:
-    'baseterra.R'
-    'zzz.R'
+Collate: 'baseterra.R' 'zzz.R'
+Packaged: 2013-12-10 20:47:09 UTC; sguha

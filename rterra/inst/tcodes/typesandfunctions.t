@@ -24,16 +24,20 @@ R.print = Rbase.Rf_PrintValue
 R.isNA = Rbase.R_IsNA
 R.isFinite = Rbase.R_finite
 R.type = Rbase.type
-if Rbase.isnan then
-   R.isNaN = Rbase.isnan
-else
-   R.isNan = Rbase.R_isnancpp
-end
+
+-- rbasechecker = {}
+-- for key,value in pairs(Rbase) do rbasechecker[key]=true end
+-- if rbasechecker['isnan'] then
+--    R.isNaN = Rbase.isnan
+-- else
+--    R.isNaN = Rbase.R_isnancpp
+-- end
 R.Complex = Rbase.Rcomplex
 R.Complex:complete()
 R.constants = terralib.new(Rbase._RConstants)
 Rbase.getConstants(R.constants)
 R.__debug = false
+R.isNaN = Rbase.isNaN
 
 terra R.Complex:abs()
    return cmath.sqrt(self.r*self.r+self.i*self.i)
@@ -156,8 +160,8 @@ end
 R.findVariable:compile()
 
 -- Wrappers around the above to make this now Lua-esque
-local asEnvironment = nil
-struct asEnvironment
+R.asEnvironment = nil
+struct R.asEnvironment
 {
    sexp : R.SEXP;
    type: int;
@@ -191,7 +195,9 @@ local emt =  {
       end
    end
 }
-R.asEnvironment = ffi.metatype(asEnvironment:cstring(),emt)
+R.asEnvironment.metamethods.__luametatable = emt
+--  see https://github.com/zdevito/terra/commit/4ff09e2fd7379b27ebced28be80cf0bece514364
+-- R.asEnvironment = ffi.metatype(asEnvironment:cstring(),emt)
 
 
 -- attributes
@@ -419,7 +425,8 @@ for _,ty in pairs(a) do
 	 return s
       end
    }
-   R[ "newMatrix" .. ty[1]] = ffi.metatype(R[ "Matrix" .. ty[1] ] :cstring(),emt)
+   R[ "Matrix" .. ty[1] ].metamethods.__luametatable = emt
+   R[ "newMatrix" .. ty[1]] =  R[ "Matrix" .. ty[1] ]   -- ffi.metatype(R[ "Matrix" .. ty[1] ] :cstring(),emt)
    R._matrices[ ty[3] ]  = R[ "newMatrix" .. ty[1]]
 end
 

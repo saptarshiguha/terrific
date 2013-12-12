@@ -35,7 +35,7 @@ extern "C" {
   int   type(SEXP);
   void  getConstants(_RConstants*);
   void setCStackLimit(int a);
-
+  int isNaN(double x);
 #ifdef __cplusplus
 }
 #endif
