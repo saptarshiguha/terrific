@@ -166,7 +166,17 @@ struct R.asEnvironment
    sexp : R.SEXP;
    type: int;
 }
+local lsF = R.makeRFunction("terrals",1, R.getNamespace("rterra"))
+
 local emt =  {
+   -- need pairs supprot
+   -- __pairs = function(a)
+   --    local listOfObjets = lsF(a)
+   --    local i = 0
+   --    local function j(t,k)
+	 
+   -- 	   end
+   -- end,
    __index =  function(tabl, key)
       return(R.findVariable(key,tabl.sexp))
    end,
@@ -179,9 +189,9 @@ local emt =  {
 	 R.defineVariable(key,value.sexp,tabl.sexp)
       end
    end,
-   __new = function(ct,p)
+   __new = function(p)
       if p == nil then
-	 return terralib.new(asEnvironment,R.constants.GlobalEnv,R.types.ENVSXP)
+	 return terralib.new(R.asEnvironment,R.constants.GlobalEnv,R.types.ENVSXP)
       elseif type(p) == "table" then
 	 local j = Rbase.Rf_allocSExp(R.types.ENVSXP)
 	 R.preserve(j)
@@ -189,14 +199,13 @@ local emt =  {
 	    R.defineVariable(a,b,j)
 	 end
 	 R.release(j)
-	 return terralib.new(asEnvironment, j,R.types.ENVSXP)
+	 return terralib.new(R.asEnvironment, j,R.types.ENVSXP)
       else
-	 return terralib.new(asEnvironment, p,R.types.ENVSXP)
+	 return terralib.new(R.asEnvironment, p,R.types.ENVSXP)
       end
    end
 }
 R.asEnvironment.metamethods.__luametatable = emt
---  see https://github.com/zdevito/terra/commit/4ff09e2fd7379b27ebced28be80cf0bece514364
 -- R.asEnvironment = ffi.metatype(asEnvironment:cstring(),emt)
 
 
@@ -412,7 +421,7 @@ for _,ty in pairs(a) do
       __newindex =  function(tabl, key, value)
 	 tabl.base[ key[1] + key[2]*tabl.nrows ]  = value
       end,
-      __new = function(ct,o,odims)
+      __new = function(o,odims)
 	 local dim = getAttr(o,"dim")
 	 local nr,nc
 	 if dim == R.constants.NilValue then
@@ -431,7 +440,7 @@ for _,ty in pairs(a) do
 end
 
 R.asMatrix = function(obj,...)
-   return R._matrices[ obj.type ]( obj,...)
+   return R._matrices[ obj.type ].metamethods.__luametatable.__new( obj,...)
 end
 
 -- function R.asDataFrame(rsexp,colnames)

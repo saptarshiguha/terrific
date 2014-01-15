@@ -1,4 +1,7 @@
-##' Gets clangs builtin paths
+##' @export
+terrals <- function(a) ls(a)
+
+##' ##' Gets clangs builtin paths
 ##' @param clangccp path to clang/clang++ binary
 ##' @return path
 ##' @export

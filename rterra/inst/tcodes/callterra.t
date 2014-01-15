@@ -206,6 +206,14 @@ local setAttr = function(obj, attr,value)
    Rbase.Rf_setAttrib(obj.sexp,Rbase.Rf_install(attr),z)
 end
 
+local myIter = function(a,i)
+   if i< a.length then
+      local v = a[i]
+      i=i+1
+      return i,v
+   end
+end
+
 
 local methods = {}
 for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
@@ -222,6 +230,9 @@ for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
 	    return getAttr(a, b)
 	 end
       end,
+      __ipairs = function(a)
+	 return myIter, a, 0
+      end,
       __newindex =function(a,b,c)
 	 if type(b) == "number" then
 	    a.ptr[b] = c
@@ -232,7 +243,7 @@ for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
       __len = function(a)
 	 return a.length
       end,
-      __new = function(ct,...)
+      __new = function(...)
 	 local args = ...
 	 local jj,ll,X
 	 if type(args) == "table" then
@@ -301,6 +312,9 @@ local emt = {
 	 return getAttr(a, b)
       end
    end,
+   __ipairs = function(a)
+      return myIter, a, 0
+   end,
    __len = function(a)
 	 return a.length
    end,
@@ -311,7 +325,7 @@ local emt = {
 	 setAttr(a, b,c) -- c must be a sexp!
       end
    end,
-   __new = function(ct,...)
+   __new = function(...)
       local args = ...
       local jj,ll,X
       if type(args) == "table" then
@@ -366,6 +380,9 @@ local emt = {
 	 return getAttr(a, b)
       end
    end,
+   __ipairs = function(a)
+      return myIter, a, 0
+   end,
    __len = function(a)
 	 return a.length
    end,
@@ -376,25 +393,25 @@ local emt = {
 	 setAttr(a, b,c) -- c must be a sexp!
       end
    end,
-   __new = function(ct,...)
+   __new = function(...)
       local args = ...
       local jj,ll,X
       if type(args) == "table" then
-	 if args.with ~= nil or args.init ~=nil then
-	    X = args.with or args.init
-	    ll = #X
-	    jj = Rbase.Rf_allocVector(R.types.VECSXP,ll)
-	    for i=1,ll do
-	       local c = X[i]
-	       Rbase.SET_VECTOR_ELT(jj, i-1, getWhat(c))
-	    end
-	 elseif args.length ~= nil then
-	    ll = args.length
-	    jj = Rbase.Rf_allocVector(R.types.VECSXP,ll)
-	 end
+   	 if args.with ~= nil or args.init ~=nil then
+   	    X = args.with or args.init
+   	    ll = #X
+   	    jj = Rbase.Rf_allocVector(R.types.VECSXP,ll)
+   	    for i=1,ll do
+   	       local c = X[i]
+   	       Rbase.SET_VECTOR_ELT(jj, i-1, getWhat(c))
+   	    end
+   	 elseif args.length ~= nil then
+   	    ll = args.length
+   	    jj = Rbase.Rf_allocVector(R.types.VECSXP,ll)
+   	 end
       else
-	 jj = args
-	 ll = Rbase.LENGTH(jj)
+   	 jj = args
+   	 ll = Rbase.LENGTH(jj)
       end
       local j = terralib.new(Rt.ListVector, jj, ll, R.types.VECSXP)
       -- ffi.gc(j,R.releaseInternal)
@@ -425,15 +442,17 @@ lookup.string = {
 lookup.number = {}
 for a,b in pairs(R.types) do lookup.number[b] = b end
 
+
 R.Robj = function(o,...)
-   print(o)
-   print(type(o))
+   local z = ...
    if type(o) == 'table' then
       o.type = lookup[ type(o.type)][o.type]
       return terralib.new(methods[ o.type ],o)
    else
       -- return methods[Rbase.TYPEOF(o)](o)
-      return terralib.new(methods[Rbase.TYPEOF(o)],o)
+      -- local f =  terralib.new(methods[Rbase.TYPEOF(o)],o)
+      local f = methods[Rbase.TYPEOF(o)].metamethods.__luametatable.__new(o)
+      return(f)
    end
 end
 
