@@ -1,16 +1,16 @@
 \name{getClangPath}
 \alias{getClangPath}
-\title{Gets clangs builtin paths}
+\title{##' Gets clangs builtin paths}
 \usage{
-  getClangPath(clangcpp)
+getClangPath(clangcpp)
 }
 \arguments{
   \item{clangccp}{path to clang/clang++ binary}
 }
 \value{
-  path
+path
 }
 \description{
-  Gets clangs builtin paths
+##' Gets clangs builtin paths
 }
 

@@ -3,7 +3,7 @@
 \title{Runs a terra/lua function
 Similar to R's .Call command, this calls a terra/lua function}
 \usage{
-  terra(f, ..., table = NULL)
+terra(f, ..., table = NULL)
 }
 \arguments{
   \item{f}{the function name}
@@ -15,15 +15,15 @@ Similar to R's .Call command, this calls a terra/lua function}
   name here}
 }
 \value{
-  for this to return anything, the function called must
-  return an R object (or a lua object wrapped in an R
-  external pointer,but be careful of Lua's gc)
+for this to return anything, the function called must
+return an R object (or a lua object wrapped in an R
+external pointer,but be careful of Lua's gc)
 }
 \description{
-  Runs a terra/lua function Similar to R's .Call command,
-  this calls a terra/lua function
+Runs a terra/lua function Similar to R's .Call command,
+this calls a terra/lua function
 }
 \seealso{
-  \code{\link{terra}},\code{\link{terraStr}}
+\code{\link{terra}},\code{\link{terraStr}}
 }
 

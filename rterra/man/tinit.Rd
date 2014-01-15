@@ -2,7 +2,8 @@
 \alias{tinit}
 \title{initializes the terra subsystem}
 \usage{
-  tinit(clang, includes, libraries)
+tinit(clang = "clang", includes, libraries, options = list(verbose = 0L,
+  debug = 1L))
 }
 \arguments{
   \item{clang}{path to clang/clang++ binary}
@@ -12,9 +13,9 @@
   \item{libraries}{path to libraries to load}
 }
 \value{
-  TRUE upon success, error if it fails
+TRUE upon success, error if it fails
 }
 \description{
-  initializes the terra subsystem
+initializes the terra subsystem
 }
 

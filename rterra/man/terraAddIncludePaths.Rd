@@ -2,19 +2,19 @@
 \alias{terraAddIncludePaths}
 \title{Adds include paths to the terra system}
 \usage{
-  terraAddIncludePaths(paths)
+terraAddIncludePaths(paths)
 }
 \arguments{
   \item{paths}{a vector of paths to load}
 }
 \value{
-  throws an error upon failure
+throws an error upon failure
 }
 \description{
-  Adds include paths to the terra system
+Adds include paths to the terra system
 }
 \seealso{
-  \code{\link{terraAddRequirePaths}},\code{\link{terraLinkLibrary}},and
-  \code{\link{processCppFlags}}
+\code{\link{terraAddRequirePaths}},\code{\link{terraLinkLibrary}},and
+\code{\link{processCppFlags}}
 }
 
