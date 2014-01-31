@@ -447,7 +447,9 @@ R.Robj = function(o,...)
    local z = ...
    if type(o) == 'table' then
       o.type = lookup[ type(o.type)][o.type]
-      return terralib.new(methods[ o.type ],o)
+      local f = methods[o.type].metamethods.__luametatable.__new(o)
+      return(f)
+      -- return terralib.new(methods[ o.type ],o)
    else
       -- return methods[Rbase.TYPEOF(o)](o)
       -- local f =  terralib.new(methods[Rbase.TYPEOF(o)],o)
