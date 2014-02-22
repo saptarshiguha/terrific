@@ -2,7 +2,7 @@
 \alias{getClangPath}
 \title{##' Gets clangs builtin paths}
 \usage{
-getClangPath(clangcpp)
+getClangPath(clangcpp, pathIsGiven = NULL)
 }
 \arguments{
   \item{clangccp}{path to clang/clang++ binary}

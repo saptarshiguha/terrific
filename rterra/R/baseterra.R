@@ -5,27 +5,37 @@ terrals <- function(a) ls(a)
 ##' @param clangccp path to clang/clang++ binary
 ##' @return path
 ##' @export
-getClangPath <- function(clangcpp){
-  fi <- system.file("cheaders","dummy.c",package="rterra")
-  a1 <- system(sprintf("%s '-###' -c %s 2>&1 ",clangcpp,fi),intern=TRUE)
-  rd <- which(grepl("resource-dir",v<-strsplit(gsub(' ','\n',paste(a1,collapse="\n")),"\n")[[1]]))
-  sprintf("%s/include",normalizePath(gsub('"',"",v[rd+1])))
+getClangPath <- function(clangcpp, pathIsGiven=NULL){
+    if(!is.null(pathIsGiven)){
+        pathIsGiven
+    }else{
+        fi <- system.file("cheaders","dummy.c",package="rterra")
+        a1 <- system(sprintf("%s '-###' -c %s 2>&1 ",clangcpp,fi),intern=TRUE)
+            rd <- which(grepl("resource-dir",v<-strsplit(gsub(' ','\n',paste(a1,collapse="\n")),"\n")[[1]]))
+        sprintf("%s/include",normalizePath(gsub('"',"",v[rd+1])))
+    }
 }
 
 ##' initializes the terra subsystem
 ##' @param clang path to clang/clang++ binary
 ##' @param includes is a vector of include directories
 ##' @param libraries path to libraries to load
-##' @options if verbose >0 then lots of output and if debug>0 then line numebrs in stack traces
+##' @param clangIncludes provide your own path to the clang includes, if missing rterra will try and find it
+##' @param rcppflags provide your own value for R CMD config --cppflags (if you do, a character vector)
+##' @param options if verbose >0 then lots of output and if debug>0 then line numebrs in stack traces
 ##' @return TRUE upon success, error if it fails
 ##' @export
-tinit <- function(clang="clang",includes,libraries,options=list(verbose=0L, debug=1L)){
+tinit <- function(clang="clang",includes,libraries,clangIncludes=NULL
+                  ,rcppflags=NULL
+                  ,options=list(verbose=0L, debug=1L)){
   if(missing(includes))
-    a1 <- paste(c(  system.file("cheaders",package="rterra"),processCppFlags(system("R CMD config --cppflags",intern=TRUE))),collapse=";")
+      a1 <- paste(c(  system.file("cheaders",package="rterra"),
+                    if(!is.null(rcppflags)) rcppflags else processCppFlags(system("R CMD config --cppflags",intern=TRUE))
+                    ),collapse=";")
   else
     a1 <- paste(includes,collapse=";")
 
-  a1 <- sprintf("%s;%s;%s;.",getClangPath(clang),a1, getwd())
+  a1 <- sprintf("%s;%s;%s;.",getClangPath(clang,clangIncludes),a1, getwd())
   if(options$debug>0){
       cat(sprintf("[terrific] INCLUDE_PATH=%s\n", a1))
   }
@@ -34,7 +44,7 @@ tinit <- function(clang="clang",includes,libraries,options=list(verbose=0L, debu
   if(is.character(a)) error(sprintf("[terrific error]: %s",a))
   if(missing(libraries)){
     ## maybe works for Linux, probably not Mac ...
-      libraries <- processLibFlags(system("R CMD config --ldflags",intern=TRUE))
+      ## libraries <- if(!is.null(rldflags)) rldflags else processLibFlags(system("R CMD config --ldflags",intern=TRUE))
   }
   bp <- system.file("tcodes","base.t",package="rterra")
   res <- terraFile(bp)
@@ -160,7 +170,8 @@ processCppFlags <- function(cppflags){
     if(length(i)>=2){
       sprintf("lib%s.so",i[[2]])
     }
-  }));a
+}));
+  a
 }
 ##' Extract libraries from link flags
 ##'  helper function to add libraries to terra given a string output from pkg-config and it's likes
