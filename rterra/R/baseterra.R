@@ -25,7 +25,7 @@ getClangPath <- function(clangcpp, pathIsGiven=NULL){
 ##' @param options if verbose >0 then lots of output and if debug>0 then line numebrs in stack traces
 ##' @return TRUE upon success, error if it fails
 ##' @export
-tinit <- function(clang="clang",includes,libraries,clangIncludes=NULL
+tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
                   ,rcppflags=NULL
                   ,options=list(verbose=0L, debug=1L)){
   if(missing(includes))
@@ -42,19 +42,19 @@ tinit <- function(clang="clang",includes,libraries,clangIncludes=NULL
   Sys.setenv(INCLUDE_PATH=a1)
   a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),PACKAGE="rterra")
   if(is.character(a)) error(sprintf("[terrific error]: %s",a))
-  if(missing(libraries)){
-    ## maybe works for Linux, probably not Mac ...
-      ## libraries <- if(!is.null(rldflags)) rldflags else processLibFlags(system("R CMD config --ldflags",intern=TRUE))
-  }
+  ## if(missing(libraries)){
+  ##   ## maybe works for Linux, probably not Mac ...
+  ##     libraries <- if(!is.null(rldflags)) rldflags else processLibFlags(system("R CMD config --ldflags",intern=TRUE))
+  ## }
   bp <- system.file("tcodes","base.t",package="rterra")
   res <- terraFile(bp)
   libraries <- c(libraries,  system.file("libs","rterra.so",package="rterra"))
   .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
   res = terraAddRequirePaths(system.file("tcodes",package="rterra"))
-  terraAddRequirePaths(system.file("examples",package="rterra"))
+  ## terraAddRequirePaths(system.file("examples",package="rterra"))
   terraStr("terralib.require('typesandfunctions')")
   terraStr("terralib.require('callterra')")
-  terraFile(system.file("examples","tests.t",package="rterra"))
+  ## terraFile(system.file("examples","tests.t",package="rterra"))
   TRUE
 }
 
