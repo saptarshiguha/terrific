@@ -50,7 +50,7 @@ tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
   res <- terraFile(bp)
   libraries <- c(libraries,  system.file("libs","rterra.so",package="rterra"))
   .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
-  res = terraAddRequirePaths(system.file("tcodes",package="rterra"))
+  res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")))
   ## terraAddRequirePaths(system.file("examples",package="rterra"))
   terraStr("terralib.require('typesandfunctions')")
   terraStr("terralib.require('callterra')")
@@ -106,7 +106,7 @@ terraStr <- function(s){
 ##' @export 
 terraAddIncludePaths <- function(paths){
   for(i in paths){
-    terraStr(sprintf('package.path = package.path .. ";%s"', i))
+    terraStr(sprintf('package.path = package.path .. ";%s;"', i))
     stop(sprintf("[terrific error]: Adding path %s caused an error", i))
   }
 }
@@ -114,29 +114,26 @@ terraAddIncludePaths <- function(paths){
 ##' Adds include paths to the terra system
 ##' @param paths a vector of paths to load
 ##' @return throws an error upon failure
-##' @details This is for terralib.require to discover paths this is
-##' how it works, Load the terra code modulename. require first checks
-##' if modulename has already been loaded by a previous call to
-##' require, returning the previously loaded results if
-##' available. Otherwise it searches terralib.path for the
-##' module. terralib.path is a semi-colon separated list of templates,
-##' e.g.: "lib/?.t;./?.t" The modulename is first converted into a
-##' path by replacing any . with a directory separator, /. Then each
-##' template is tried until a file is found. For instance, using the
-##' example path, the call terralib.require("foo.bar") will try to
-##' load lib/foo/bar.t or foo/bar.t. If a file is found, then require
-##' will return the result of calling terralib.loadfile on the
-##' file. By default, terralib.path is set to the environment variable
-##' TERRA_PATH or the value "?.t" if TERRA_PATH is not set.
-##' This functions "?.t" to every path in modulenames
-##' @seealso \code{\link{terraAddIncludePaths}},\code{\link{terraLinkLibrary}}
+##' @details This is for terralib.require to discover paths. To see how this works
+##'  see http://lua-users.org/wiki/ModulesTutorial
+##' Appends 'paths' to the package.path variable
+##' @seealso \code{\link{terraAddIncludePaths}},\code{\link{terraLinkLibrary}},,\code{\link{terraAddGeneralPaths}}
 ##' @export 
 terraAddRequirePaths <- function(modulenames){
-  for(i in modulenames){
-    res <- terraStr(sprintf('package.path = package.path .. ";%s/?.t"', i))
-  }
+    terraAddGeneralPaths(modulenames, "package.path")
 }
 
+##' Updates a search path
+##' @param paths a vector of paths to load
+##' @param whatpath exampls are package.path or package.cpath
+##' @return throws an error upon failure
+##' ##' @seealso \code{\link{terraAddIncludePaths}},\code{\link{terraLinkLibrary}},,\code{\link{terraAddGeneralPaths}}
+##' @export
+terraAddGeneralPaths <- function(modulenames,whatpath){
+    for(i in modulenames){
+        res <- terraStr(sprintf('%s=  "%s;" .. %s', whatpath,i,whatpath))
+    }
+}
 ##' Adds libraries to the terra system
 ##' @param libs a vector of libraries to load
 ##' @return an error upon failure

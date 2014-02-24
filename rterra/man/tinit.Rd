@@ -2,7 +2,7 @@
 \alias{tinit}
 \title{initializes the terra subsystem}
 \usage{
-tinit(clang = "clang", includes, libraries, clangIncludes = NULL,
+tinit(clang = "clang", includes, libraries = NULL, clangIncludes = NULL,
   rcppflags = NULL, options = list(verbose = 0L, debug = 1L))
 }
 \arguments{
