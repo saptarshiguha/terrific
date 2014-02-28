@@ -423,8 +423,10 @@ Rt.ListVector.metamethods.__luametatable = emt
 methods[R.types.VECSXP] = Rt.ListVector --ffi.metatype(Rt.ListVector:cstring(), emt)
 
 
-methods[R.types.NILSXP] = function(a) return R.constants.NilValue end
-methods[R.types.ENVSXP] = R.asEnvironment
+methods[R.types.NILSXP] = {metamethods = { __luametatable = { __new = function(a) return R.constants.NilValue end }}}
+
+methods[R.types.ENVSXP] = {metamethods = { __luametatable = { __new = function(a) return R.asEnvironment(a) end }}}
+
 
 local lookup = { string = {}}
 lookup.string = {

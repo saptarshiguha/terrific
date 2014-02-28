@@ -3,52 +3,39 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <terra.h>
-
+#include <stdarg.h>
 #include "rterra.h"
 
 static lua_State * L;
 extern uintptr_t R_CStackLimit;
+#define ERR_BUF 1024*64
+const char* RERR_OBJNOTSTRING= "error object is not a string";
+const char* RERR_TERRIFIC= ": ";
+const char* RERR_STRANGETABLE= "you are returning strange tables";
+const char* RERR_COMPUTE= "error in computing function: ";
+const char* RERR_LIBLOAD="error in Loading Libraries";
 
 extern "C" {
   void setCStackLimit(int a){
     R_CStackLimit = a;
   }
-  SEXP  doerror(lua_State * L) {
-    const char *x = luaL_checkstring(L,-1);
-    SEXP s;
-    PROTECT(s = Rf_allocVector(STRSXP,1));
-    SET_STRING_ELT(s,0,Rf_mkCharLen(x,strlen(x)));
-    UNPROTECT(1);
-    return (s);
-  }
-
-
-  SEXP newTerra(int verbose, int debug){
-    SEXP s=R_NilValue;
-    lua_State *l = luaL_newstate(); //create a plain lua state
-    luaL_openlibs(l);                //initialize its libraries
-    //initialize the terra state in lua
-    terra_Options t = { verbose,debug};
-    if(terra_initwithoptions(l,&t)){
-      return(doerror(l));
-    }
-    return(s);
-  }
-
   SEXP initTerrific(SEXP r0){
     SEXP s=R_NilValue;
     if(!L){
       L = luaL_newstate(); //create a plain lua state
       if(!L){
-	Rf_error("[Terrific Error] luaL_newstate returned null\n");
+	Rf_error("(terra): %s","luaL_newstate returned null\n");
 	return(s);
       }
       luaL_openlibs(L);                //initialize its libraries
       //initialize the terra state in lua
       terra_Options t = { INTEGER(r0)[0],INTEGER(r0)[1]};
       if(terra_initwithoptions(L,&t)){
-	return(doerror(L));
+	Rf_error("(terra): %s",(char*)luaL_checkstring(L,-1));
       }
+      lua_pushlightuserdata(L, (void *)L);
+      lua_pushstring(L, NULL);
+      lua_settable(L, LUA_REGISTRYINDEX);
     }
     return(s);  
   }
@@ -89,14 +76,14 @@ extern "C" {
     lua_sethook(L, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
   }
 
-  int report (lua_State *L, int status) {
+  const char* report (lua_State *L, int status) {
     if (status && !lua_isnil(L, -1)) {
-      const char *msg = lua_tostring(L, -1);
-      if (msg == NULL) msg = "(error object is not a string)";
-      l_message("[Terrific Error]: ", msg);
+      const char *msg = (const char *)luaL_checkstring(L, -1);
+      if (msg == NULL) msg = RERR_OBJNOTSTRING;
       lua_pop(L, 1);
+      return(msg);
     }
-    return status;
+    return NULL;
   }
 
   int docall (lua_State *L, int narg) {
@@ -108,9 +95,9 @@ extern "C" {
     status = lua_pcall(L, narg, 1, base);
     signal(SIGINT, SIG_DFL);
     lua_remove(L, base);
-    // if (status != 0) {
+    if (status != 0) {
       lua_gc(L, LUA_GCCOLLECT, 0);
-    // }
+    }
     return status;
   }
 
@@ -118,9 +105,9 @@ extern "C" {
   SEXP terraDoFile(SEXP s){
     const char *s1 = CHAR(STRING_ELT(s,0));
     int r = terra_dofile(L, s1);
-    lua_gc(L,LUA_GCCOLLECT,0);
     if(r) {
-      return(doerror(L));
+      lua_gc(L,LUA_GCCOLLECT,0);
+      Rf_error("(terra): %s",luaL_checkstring(L,-1));
     }
     SEXP res = Rf_allocVector(INTSXP, 1);
     INTEGER(res)[0] = r;
@@ -129,9 +116,9 @@ extern "C" {
   SEXP terraDoString(SEXP s){
     const char *s1 = CHAR(STRING_ELT(s,0));
     int r = terra_dostring(L, s1);
-    lua_gc(L,LUA_GCCOLLECT,0);
     if(r) {
-      return(doerror(L));
+      lua_gc(L,LUA_GCCOLLECT,0);
+      Rf_error("(terra): %s",luaL_checkstring(L,-1));
     }
     SEXP res = Rf_allocVector(INTSXP, 1);
     INTEGER(res)[0] = r;
@@ -140,57 +127,35 @@ extern "C" {
 
   SEXP carryOn(SEXP _n,int n){
     int status= docall(L,n);
-    report(L,status);
-    if(!status){
+    const char* err = report(L,status);
+    if(!err){
       int rt = lua_type(L,-1);
-      // printf("lua type:%d\n", lua_type (L,-1));
       const void *p = lua_topointer (L,-1);
       if(p){
-	// printf("lua ptr:%p\n",p);       
 	SEXP a;
 	if(rt == LUA_TLIGHTUSERDATA )
 	  a = (SEXP)p;
 	else if(rt == LUA_TTABLE){
-	  // printf("Table time");
 	  lua_getfield(L,-1,"sexp");
 	  a = (SEXP)(lua_topointer(L,-1));
-	  if(!a) Rf_error("[terrific error]: You are returning strange tables");
-	  // printf("Table time %p",a);
+	  if(!a) 
+	    Rf_error("(terra): %s",RERR_STRANGETABLE);
 	}else  a = (*((SEXP *)p));
 	lua_pop(L,1);
 	return(a);
       }
-    }else Rf_error("[terrific] Error in computing function:%s",STRING_ELT(_n,0));
+    }else{
+      Rf_error("(terra): %s",err);
+    }
     return(R_NilValue);
   }
-
-  // void freeLua(SEXP a){
-  //   printf("Freeing the Lua bastard\n");
-  //   lua_pushlightuserdata(L, (void *)a);
-  //   lua_pushnil(L);
-  //   lua_settable(L, LUA_REGISTRYINDEX);
-  // }
-  
-  // SEXP wrapOn(){
-  //     if(lua_isnoneornil (L,-1))
-  // 	Rf_error("[terrific] Wrap nothing? I will not!");
-  //     void *res = lua_topointer(L,-1);
-  //     SEXP a = R_MakeExternalPtr(res,R_NilValue,NULL);
-  //     lua_pushlightuserdata(l, (void*)a);
-  //     lua_pushvalue(l, -2);
-  //     lua_settable(L, LUA_REGISTRYINDEX);
-  //     Rf_protect(a);
-  //     Rf_RegisterCFinalizerEx(a, freeLua,1);
-  //     Rf_unprotect(1);
-  //     printf("Protecting the Lua bastard\n");
-  //     return(a);
-  // }
   
   void setFunction(SEXP _n, SEXP tb){
     if(tb!=R_NilValue) {
       lua_getglobal(L, CHAR(STRING_ELT(tb,0)));
-      if(lua_isnoneornil (L,-1))
-	Rf_error("[terrific] There was an error looking up the table");
+      if(lua_isnoneornil (L,-1)){
+	Rf_error("(terra): %s","There was an error looking up the table");
+      }
       lua_getfield(L,-1,CHAR(STRING_ELT(_n,0)));
     }else lua_getglobal(L,CHAR(STRING_ELT(_n,0)));
   }
@@ -270,9 +235,9 @@ extern "C" {
       lua_pushlstring(L, f, strlen(f));
     }
     int status= docall(L,LENGTH(r0));
-    report(L,status);
-    if(status)
-      Rf_error("[terrific error]: In Loading Libraries");;
+    const char *err = report(L,status);
+    if(err)
+      Rf_error("(terra): %s",RERR_LIBLOAD);
     return(R_NilValue);
   }
   
@@ -287,7 +252,7 @@ extern "C" {
     cmdexpr = PROTECT(R_ParseVector(cmdSexp, -1, &status, R_NilValue));
     if (status != PARSE_OK) {
       UNPROTECT(2);
-      Rf_error("[terrific error]: invalid call: %s", cmd);
+      Rf_error("(terra): %s","invalid call: %s", cmd);
       return(R_NilValue);
     }
     int rerr;

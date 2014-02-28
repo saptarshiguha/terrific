@@ -69,7 +69,6 @@ fns <- sapply(0:10,function(a) sprintf("doTerraFunc%s",a))
 ##' @export
 terraFile <- function(filename){
   x <- .Call("terraDoFile",normalizePath(filename),PACKAGE="rterra")
-  if(is.character(x)) stop(sprintf("[terrific]: %s",x)) else x
 }
 
 ##' Runs a terra/lua function 
@@ -96,7 +95,6 @@ terra <- function(f,...,table=NULL){
 ##' @export 
 terraStr <- function(s){
   a <- .Call("terraDoString",s,PACKAGE="rterra")
-  if(is.character(a)) stop(sprintf("[terrific]: %s",a))
 }
 
 ##' Adds include paths to the terra system
