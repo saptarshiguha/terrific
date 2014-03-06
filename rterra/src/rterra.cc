@@ -8,7 +8,7 @@
 
 static lua_State * L;
 extern uintptr_t R_CStackLimit;
-#define ERR_BUF 1024*64
+#define MY_ERR_BUF 1024*64
 const char* RERR_OBJNOTSTRING= "error object is not a string";
 const char* RERR_TERRIFIC= ": ";
 const char* RERR_STRANGETABLE= "you are returning strange tables";

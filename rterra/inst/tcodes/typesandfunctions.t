@@ -25,13 +25,6 @@ R.isNA = Rbase.R_IsNA
 R.isFinite = Rbase.R_finite
 R.type = Rbase.type
 
--- rbasechecker = {}
--- for key,value in pairs(Rbase) do rbasechecker[key]=true end
--- if rbasechecker['isnan'] then
---    R.isNaN = Rbase.isnan
--- else
---    R.isNaN = Rbase.R_isnancpp
--- end
 R.Complex = Rbase.Rcomplex
 R.Complex:complete()
 R.constants = terralib.new(Rbase._RConstants)
@@ -50,7 +43,7 @@ R.release:compile()
 
 terra R.releaseInternal(x:&opaque)
    var b = [R.SEXP](x)
-   if R.__debug then
+   if R.__debug  then
       stdio.printf("Releasing Object %p [%d]\n", x, Rbase.TYPEOF(b))
    end
    Rbase.R_ReleaseObject(b)
@@ -121,7 +114,7 @@ terra R.evalStr(q : &int8): R.SEXP
 end
 R.evalStr:compile()
 
-R.copy = Rbase.Rf_duplicate
+R.duplicateObject = Rbase.Rf_duplicate
 
 terra R.makeXtnlPtr(data : &uint8, finalizer: R.SEXP -> {} ,info: R.SEXP)
    var a = Rbase.R_MakeExternalPtr(data,R.constants.NilValue,info)
@@ -169,7 +162,7 @@ struct R.asEnvironment
 local lsF = R.makeRFunction("terrals",1, R.getNamespace("rterra"))
 
 local emt =  {
-   -- need pairs supprot
+   -- need pairs support
    -- __pairs = function(a)
    --    local listOfObjets = lsF(a)
    --    local i = 0
@@ -206,7 +199,6 @@ local emt =  {
    end
 }
 R.asEnvironment.metamethods.__luametatable = emt
--- R.asEnvironment = ffi.metatype(asEnvironment:cstring(),emt)
 
 
 -- attributes
@@ -217,194 +209,19 @@ local setAttr = function(obj, attr,value)
    Rbase.Rf_setAttrib(obj.sexp,Rbase.Rf_install(attr),value)
 end
 
--- -- Generate Code for INTEGER, DOUBLE, COMPLEX, LOGICAL
--- -- for a in simpletypes do
-
--- local t = {}
--- local a = { {name = "Integer",rtype = R.types.INTSXP,ptr = Rbase.INTEGER, ctype  = int},
--- 	    {name = "Real",rtype = R.types.REALSXP,ptr = Rbase.REAL, ctype  = double},
--- 	    {name = "Complex",rtype = R.types.CPLXSXP,ptr = Rbase.COMPLEX, ctype  = R.Complex},
--- 	    {name = "Logical",rtype = R.types.LGLSXP,ptr = Rbase.LOGICAL, ctype  = int},
--- 	    {name = "Raw",rtype = R.types.RAWSXP,ptr = Rbase.RAW, ctype  = uint8}, 
--- }
-
-
-
--- for _,ty in pairs(a) do
---    t[ "Array" .. ty.name ] = terralib.types.newstruct( "Array" .. ty.name  )
---    t[ "Array" .. ty.name ].entries:insert{ field = "sexp", type = R.SEXP }
---    t[ "Array" .. ty.name ].entries:insert{ field = "ptr", type = &ty.ctype }
---    t[ "Array" .. ty.name ].entries:insert{ field = "length", type = int }
---    t[ "Array" .. ty.name ].entries:insert{ field = "type", type = int }
---    t[ "Array" .. ty.name ].entries:insert{ field = "getAttr", type = { & t[ "Array" .. ty.name ],rawstring} -> {R.SEXP} }
---    t[ "Array" .. ty.name ].entries:insert{ field = "setAttr", type = { & t[ "Array" .. ty.name ],rawstring,R.SEXP} -> {} }
---    t[ "Array" .. ty.name ]:complete()
---    local emt =  {
---       __index  = function(tbl, key)
--- 	 return( tbl.ptr[ key ])
---       end,
---       __newindex  = function(tbl, key,value)
--- 	 tbl.ptr[ key ] = value
---       end,
---       __new = function(ct,...)
--- 	 local args = ...
--- 	 local fromSexp = args.fromSexp or false
--- 	 local copy = args.copy or false
--- 	 local length = args.length or 0
--- 	 local init = args.init or {}
--- 	 -- case when we want an unitialized vector of a given length
--- 	 if not fromSexp == false then
--- 	    if copy == true then
--- 	       local sexp = Rbase.Rf_duplicate( fromSexp )
--- 	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), Rbase.LENGTH(sexp),ty.rtype,getAttr,setAttr)
--- 	       ffi.gc(w.sexp,R.release)
--- 	       R.preserve(w.sexp)
--- 	       return w
--- 	    else
--- 	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, ty.ptr(fromSexp), Rbase.LENGTH(fromSexp),ty.rtype,getAttr,setAttr)
--- 	       return w
--- 	    end
--- 	 end
--- 	 if length >0 then
--- 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, length)
--- 	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), length,ty.rtype,getAttr,setAttr)
--- 	    ffi.gc(w.sexp,R.release)
--- 	    R.preserve(w.sexp)
--- 	    return w
--- 	 end
--- 	 if #init >0 then
--- 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
--- 	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, ty.ptr(sexp), #init,ty.rtype,getAttr,setAttr)
--- 	    ffi.gc(w.sexp,R.release)
--- 	    R.preserve(w.sexp)
--- 	    for i=1,#init do
--- 	       w.ptr[i-1] = init[i]
--- 	    end
--- 	    return w
--- 	 end
---       end,
---    }
---    R[ "new" .. ty.name ] = ffi.metatype( t[ "Array" .. ty.name ]:cstring(),emt)
--- end
-
--- R.cstring = function(d) return Rbase.mychar(d) end
--- R.asString = function(d) return ffi.string(Rbase.mychar(d)) end
 
 R.cstr  = terra(v: R.SEXP) : &int8
    return Rbase.mychar(v)
 end
--- R.luastr = terra(v: R.SEXP)
---    return ffi.string(Rbase.mychar(v))
--- end
+R.cstring = R.cstr
+R.luastr = terra(v: R.SEXP)
+   return ffi.string(Rbase.mychar(v))
+end
+R.luastring = R.luastr
 
 
--- Generate Code for STRING, VECTOR
--- local a = { {
--- 	       name = "String",rtype = R.types.STRSXP,
--- 	       reader = function(t,k) return Rbase.STRING_ELT(t,k) end,
--- 	       writer=function(t,k,v)
--- 		  if type(v) == "string" then 
--- 		     Rbase.SET_STRING_ELT(t,k,Rbase.Rf_mkChar(v))
--- 		  else
--- 		     Rbase.SET_STRING_ELT(t,k,v)
--- 		  end
--- 	       end
--- 	    },
--- 	    {
--- 	       name = "Vector",rtype = R.types.VECSXP,
--- 	       reader = function(t,k) return Rbase.VECTOR_ELT(t,k) end,
--- 	       writer=function(t,k,v) Rbase.SET_VECTOR_ELT(t,k,v) end,
--- 	    }
--- }
 
--- initInitializer = {}
--- initInitializer[R.types.STRSXP] = function(ty,init)
---    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
---    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,getAttr,setAttr)
---    ffi.gc(w.sexp,R.release)
---    R.preserve(w.sexp)
---    for i=1,#init do
---       ty.writer(w.sexp, i-1,init[i])
---    end
---    return w
--- end
-
--- initInitializer[R.types.VECSXP] = function(ty,init)
---    local sexp =  Rbase.Rf_allocVector( ty.rtype, #init)
---    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, #init,ty.rtype,getAttr,setAttr)
---    ffi.gc(w.sexp,R.release)
---    R.preserve(w.sexp)
---    local names = {}
---    local cnt = 0
---    local hasatleastonename = false
---    for i, n in pairs(init) do
---       cnt = cnt + 1
---       names[cnt]  = n
---       ty.writer(w.sexp, cnt-1,init[i])
---    end
---    if #names >0  then hasatleastonename = true end
---    for i=1,#init do
---       cnt = cnt+1
---       names[cnt] = ""
---       ty.writer(w.sexp, cnt-1,init[i])
---    end
---    if hasatleastonename then
---       Rbase.Rf_setAttrib(sexp,Rbase.Rf_install("names"),R.newString{init=names}  )
---    end
---    return w
--- end
-
--- for _,ty in pairs(a) do
---    t[ "Array" .. ty.name ] = terralib.types.newstruct( "Array" .. ty.name  )
---    t[ "Array" .. ty.name ].entries:insert{ field = "sexp", type = R.SEXP }
---    t[ "Array" .. ty.name ].entries:insert{ field = "length", type = int }
---    t[ "Array" .. ty.name ].entries:insert{ field = "type", type = int }
---    t[ "Array" .. ty.name ].entries:insert{ field = "getAttr", type = { & t[ "Array" .. ty.name ],rawstring} -> {R.SEXP} }
---    t[ "Array" .. ty.name ].entries:insert{ field = "setAttr", type = { & t[ "Array" .. ty.name ],rawstring,R.SEXP} -> {} }
---    t[ "Array" .. ty.name ]:complete()
---    local emt =  {
---       __index  = function(tbl, key)
--- 	 return( ty.reader( tbl.sexp, key) )
---       end,
---       __newindex  = function(tbl, key,value)
--- 	 ty.writer(tbl.sexp, key,value)
---       end,
---       __new = function(ct,...)
--- 	 local args = ...
--- 	 local fromSexp = args.fromSexp or false
--- 	 local copy = args.copy or false
--- 	 local length = args.length or 0
--- 	 local init = args.init or {}
--- 	 -- case when we want an unitialized vector of a given length
--- 	 if not fromSexp == false then
--- 	    if copy == true then
--- 	       local sexp = Rbase.Rf_duplicate( fromSexp )
--- 	       local w  = terralib.new( t[ "Array" .. ty.name ], sexp, Rbase.LENGTH(sexp),ty.rtype,getAttr,setAttr)
--- 	       ffi.gc(w.sexp,R.release)
--- 	       R.preserve(w.sexp)
--- 	       return w
--- 	    else
--- 	       local w  = terralib.new( t[ "Array" .. ty.name ], fromSexp, Rbase.LENGTH(fromSexp),ty.rtype,getAttr,setAttr)
--- 	       return w
--- 	    end
--- 	 end
--- 	 if length >0 then
--- 	    local sexp =  Rbase.Rf_allocVector( ty.rtype, length)
--- 	    local w  = terralib.new( t[ "Array" .. ty.name ], sexp, length,ty.rtype,getAttr,setAttr)
--- 	    ffi.gc(w.sexp,R.release)
--- 	    R.preserve(w.sexp)
--- 	    return w
--- 	 end
--- 	 if #init >0 then
--- 	    local w = initInitializer[ty.rtype]( ty,init )
--- 	    return (w)
--- 	 end
---       end,
---    }
---    R[ "new" .. ty.name ] = ffi.metatype( t[ "Array" .. ty.name ]:cstring(),emt)
--- end
-
--- Wrappers for asMatrix, asDataFrame
+-- Wrappers for asMatrix
 a = { {"Real",double,R.types.REALSXP}, {"Integer",int,R.types.INTSXP}}
 R._matrices = {}
 for _,ty in pairs(a) do
@@ -443,18 +260,6 @@ R.asMatrix = function(obj,...)
    return R._matrices[ obj.type ].metamethods.__luametatable.__new( obj,...)
 end
 
--- function R.asDataFrame(rsexp,colnames)
-   
--- end
-R.testmethod = function(a)
-   R.print(a)
-end
-
-
-   
-
-
--- print("Loaded rtypes")
 return R,Rbase
  
 

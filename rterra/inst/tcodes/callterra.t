@@ -251,9 +251,11 @@ for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
 	       X = args.with or args.init
 	       ll = #X
 	       jj = Rbase.Rf_allocVector(args.type,ll)
+	       R.preserve(jj)
 	       for i=1,ll do
 		  tp[2](jj)[i-1] =X[i]
 	       end
+	       R.release(jj)
 	    elseif args.length ~= nil then
 	       ll = args.length
 	       jj = Rbase.Rf_allocVector(args.type,ll)
@@ -265,6 +267,7 @@ for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
 	 local j = terralib.new(tp[1], jj, tp[2](jj), ll, tp[3])
 	 -- ffi.gc(j,R.releaseInternal)
 	 -- Rbase.R_PreserveObject(j.sexp)
+	 j = R.lprotect(j)
 	 return j
       end
    }
@@ -292,11 +295,16 @@ local qtype = function(j)
       end
    end
 end
-local convert = { string = function(d) return Rbase.Rf_mkChar(d) end}
+local convert = { string = function(d)
+--		     print('string')
+--		     print(d)
+		     return Rbase.Rf_mkChar(d) end}
 convert[R.types.CHARSXP] = function(d) return d end
 convert[R.types.STRSXP] = function(d) return Rbase.STRING_ELT(d,0) end
 convert["&int8"] = function(d)
-   return   Rbase.Rf_mkChar(ffi.string(d))
+--   print("int8")
+--   print(d)
+   return   Rbase.Rf_mkChar(d)
 end
 
 local emt = {
@@ -320,7 +328,9 @@ local emt = {
    end,
    __newindex =function(a,b,c)
       if type(b) == "number" then
-	 Rbase.SET_STRING_ELT(a.sexp, b, convert[ qtype(c) ](c))
+	 local f = convert[ qtype(c) ](c)
+--	 R.print(f)
+	 Rbase.SET_STRING_ELT(a.sexp, b, f)
       else
 	 setAttr(a, b,c) -- c must be a sexp!
       end
@@ -333,10 +343,12 @@ local emt = {
 	    X = args.with or args.init
 	    ll = #X
 	    jj = Rbase.Rf_allocVector(R.types.STRSXP,ll)
+	    R.preserve(jj)
 	    for i=1,ll do
 	       local c =X[i]
 	       Rbase.SET_STRING_ELT(jj, i-1, convert[ qtype(c) ](c))
 	    end
+	    R.release(jj)
 	 elseif args.length ~= nil then
 	    ll = args.length
 	    jj = Rbase.Rf_allocVector(R.types.STRSXP,ll)
@@ -346,6 +358,7 @@ local emt = {
 	 ll = Rbase.LENGTH(jj)
       end
       local j = terralib.new(Rt.StringVector, jj, ll, R.types.STRSXP)
+      j=R.lprotect(j)
       -- ffi.gc(j,R.releaseInternal)
       -- Rbase.R_PreserveObject(j.sexp)
       return j
@@ -401,12 +414,14 @@ local emt = {
    	    X = args.with or args.init
    	    ll = #X
    	    jj = Rbase.Rf_allocVector(R.types.VECSXP,ll)
+	    R.preserve(jj)
    	    for i=1,ll do
    	       local c = X[i]
    	       Rbase.SET_VECTOR_ELT(jj, i-1, getWhat(c))
    	    end
+	    R.release(jj)
    	 elseif args.length ~= nil then
-   	    ll = args.length
+   	    ll = args.length	    
    	    jj = Rbase.Rf_allocVector(R.types.VECSXP,ll)
    	 end
       else
@@ -414,17 +429,17 @@ local emt = {
    	 ll = Rbase.LENGTH(jj)
       end
       local j = terralib.new(Rt.ListVector, jj, ll, R.types.VECSXP)
+      j = R.lprotect(j)
       -- ffi.gc(j,R.releaseInternal)
       -- Rbase.R_PreserveObject(j.sexp)
       return j
    end
 }
 Rt.ListVector.metamethods.__luametatable = emt
-methods[R.types.VECSXP] = Rt.ListVector --ffi.metatype(Rt.ListVector:cstring(), emt)
+methods[R.types.VECSXP] = Rt.ListVector 
 
 
 methods[R.types.NILSXP] = {metamethods = { __luametatable = { __new = function(a) return R.constants.NilValue end }}}
-
 methods[R.types.ENVSXP] = {metamethods = { __luametatable = { __new = function(a) return R.asEnvironment(a) end }}}
 
 
