@@ -267,7 +267,6 @@ for _,tp in pairs({{Rt.IntegerVector,Rbase.INTEGER,R.types.INTSXP},
 	 local j = terralib.new(tp[1], jj, tp[2](jj), ll, tp[3])
 	 -- ffi.gc(j,R.releaseInternal)
 	 -- Rbase.R_PreserveObject(j.sexp)
-	 j = R.lprotect(j)
 	 return j
       end
    }
@@ -296,14 +295,10 @@ local qtype = function(j)
    end
 end
 local convert = { string = function(d)
---		     print('string')
---		     print(d)
 		     return Rbase.Rf_mkChar(d) end}
 convert[R.types.CHARSXP] = function(d) return d end
 convert[R.types.STRSXP] = function(d) return Rbase.STRING_ELT(d,0) end
 convert["&int8"] = function(d)
---   print("int8")
---   print(d)
    return   Rbase.Rf_mkChar(d)
 end
 
@@ -329,8 +324,8 @@ local emt = {
    __newindex =function(a,b,c)
       if type(b) == "number" then
 	 local f = convert[ qtype(c) ](c)
---	 R.print(f)
 	 Rbase.SET_STRING_ELT(a.sexp, b, f)
+	 -- Rbase.SET_STRING_ELT(a.sexp,b,Rbase.Rf_mkChar(c))
       else
 	 setAttr(a, b,c) -- c must be a sexp!
       end
@@ -358,9 +353,6 @@ local emt = {
 	 ll = Rbase.LENGTH(jj)
       end
       local j = terralib.new(Rt.StringVector, jj, ll, R.types.STRSXP)
-      j=R.lprotect(j)
-      -- ffi.gc(j,R.releaseInternal)
-      -- Rbase.R_PreserveObject(j.sexp)
       return j
    end
 }
@@ -429,7 +421,6 @@ local emt = {
    	 ll = Rbase.LENGTH(jj)
       end
       local j = terralib.new(Rt.ListVector, jj, ll, R.types.VECSXP)
-      j = R.lprotect(j)
       -- ffi.gc(j,R.releaseInternal)
       -- Rbase.R_PreserveObject(j.sexp)
       return j

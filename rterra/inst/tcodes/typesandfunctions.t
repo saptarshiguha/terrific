@@ -40,27 +40,52 @@ terra R.release(x:R.SEXP)
    Rbase.R_ReleaseObject(x)
 end
 R.release:compile()
-
-terra R.releaseInternal(x:&opaque)
-   var b = [R.SEXP](x)
-   if R.__debug  then
-      stdio.printf("Releasing Object %p [%d]\n", x, Rbase.TYPEOF(b))
-   end
-   Rbase.R_ReleaseObject(b)
-end
-R.releaseInternal:compile()
-
 terra R.preserve(x:R.SEXP)
    Rbase.R_PreserveObject(x)
 end
 R.preserve:compile()
 
+-- terra R.releaseInternal(x:&opaque)
+-- -- this is wrong, since x is a Rt.* type
+--    var b = [R.SEXP](x)
+--    if R.__debug  then
+--       R.print(b)
+--       stdio.printf("Releasing Object %p [%d]\n", x, Rbase.TYPEOF(b))
+--    end
+--    Rbase.R_ReleaseObject(b)
+-- end
+-- R.releaseInternal:compile()
 
-function R.lprotect(o)
-   ffi.gc(o, R.releaseInternal)
+function R.releaseInternal(s)
+   if R.__debug then
+      stdio.printf("\tReleasing SEXP %p [%d]\n", s.sexp, Rbase.TYPEOF(s.sexp))
+   end
+   Rbase.R_ReleaseObject(s.sexp)
+   -- Rbase.Rf_unprotect(1)
+end 
+function R.autoProtect(o)
+   if R.__debug then
+      stdio.printf("Protecting SEXP %p[%d]\n",o.sexp,Rbase.TYPEOF(o.sexp))
+   end
+   -- Rbase.Rf_protect(o.sexp)
    Rbase.R_PreserveObject(o.sexp)
+   ffi.gc(o, R.releaseInternal)
    return(o)
 end
+-- R.protectMe=R.lprotect
+R.protectMe = function(o)
+   Rbase.R_PreserveObject(o.sexp)
+end
+R.unprotectMe = function(n)
+   -- n = n or 1
+   -- if type(n) ~= 'number' then
+   --    error('unprotectMe requires a number')
+   -- end
+   -- Rbase.Rf_unprotect(n)
+   Rbase.R_ReleaseObject(n.sexp)
+end
+
+
 
 for a,b in pairs({ {"NilValue"},{"NaSTRING"},{"GlobalEnv"},{"EmptyEnv"},{"BaseEnv"},{"UnboundValue"},
 		   {"NaN",double},{"PosInf",double},{"NegInf",double}, {"NaREAL",double},

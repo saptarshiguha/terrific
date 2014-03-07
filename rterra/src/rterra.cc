@@ -58,12 +58,6 @@ extern "C" {
     return 1;
   }
 
-
-  void l_message (const char *pname, const char *msg) {
-    if (pname) fprintf(stderr, "%s: ", pname);
-    fprintf(stderr, "%s\n", msg);
-    fflush(stderr);
-  }
   void lstop (lua_State *L, lua_Debug *ar) {
     (void)ar;  /* unused arg. */
     lua_sethook(L, NULL, 0, 0);
@@ -100,34 +94,10 @@ extern "C" {
     }
     return status;
   }
-
- 
-  SEXP terraDoFile(SEXP s){
-    const char *s1 = CHAR(STRING_ELT(s,0));
-    int r = terra_dofile(L, s1);
-    if(r) {
-      lua_gc(L,LUA_GCCOLLECT,0);
-      Rf_error("(terra): %s",luaL_checkstring(L,-1));
-    }
-    SEXP res = Rf_allocVector(INTSXP, 1);
-    INTEGER(res)[0] = r;
-    return(res); // 0 is okay, 1 is BAD
-  }
-  SEXP terraDoString(SEXP s){
-    const char *s1 = CHAR(STRING_ELT(s,0));
-    int r = terra_dostring(L, s1);
-    if(r) {
-      lua_gc(L,LUA_GCCOLLECT,0);
-      Rf_error("(terra): %s",luaL_checkstring(L,-1));
-    }
-    SEXP res = Rf_allocVector(INTSXP, 1);
-    INTEGER(res)[0] = r;
-    return(res); // 0 is okay, 1 is BAD
-  }
-
   SEXP carryOn(SEXP _n,int n){
     int status= docall(L,n);
     const char* err = report(L,status);
+    SEXP retvalue = R_NilValue;
     if(!err){
       int rt = lua_type(L,-1);
       const void *p = lua_topointer (L,-1);
@@ -140,16 +110,44 @@ extern "C" {
 	  a = (SEXP)(lua_topointer(L,-1));
 	  if(!a) 
 	    Rf_error("(terra): %s",RERR_STRANGETABLE);
-	}else  a = (*((SEXP *)p));
+	}else  a = *((SEXP *)p);
 	lua_pop(L,1);
-	return(a);
+	retvalue = a;
       }
     }else{
       Rf_error("(terra): %s",err);
     }
-    return(R_NilValue);
+    // lua_gc(L, LUA_GCCOLLECT, 0);
+    return(retvalue);
   }
   
+ 
+  SEXP terraDoFile(SEXP s){
+    const char *s1 = CHAR(STRING_ELT(s,0));
+    int r = terra_dofile(L, s1);
+    if(r) {
+      lua_gc(L,LUA_GCCOLLECT,0);
+      Rf_error("(terra): %s",luaL_checkstring(L,-1));
+    }
+    // lua_gc(L, LUA_GCCOLLECT, 0);
+    SEXP res = Rf_allocVector(INTSXP, 1);
+    INTEGER(res)[0] = r;
+    return(res); // 0 is okay, 1 is BAD
+  }
+  SEXP terraDoString(SEXP s){
+    const char *s1 = CHAR(STRING_ELT(s,0));
+    int r = terra_dostring(L, s1);
+    if(r) {
+      lua_gc(L,LUA_GCCOLLECT,0);
+      Rf_error("(terra): %s",luaL_checkstring(L,-1));
+    }
+    // lua_gc(L, LUA_GCCOLLECT, 0);
+    SEXP res = Rf_allocVector(INTSXP, 1);
+    INTEGER(res)[0] = r;
+    return(res); // 0 is okay, 1 is BAD
+  }
+
+
   void setFunction(SEXP _n, SEXP tb){
     if(tb!=R_NilValue) {
       lua_getglobal(L, CHAR(STRING_ELT(tb,0)));
