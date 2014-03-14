@@ -1,7 +1,7 @@
 Package: rterra
 Type: Package
 Title: Write extensions in Lua/Terra
-Version: 1.2
+Version: 1.3
 Date: 2013-07-15
 Author: Saptarshi Guha
 Maintainer: Saptarshi Guha <saptarshi.guha@gmail.com>

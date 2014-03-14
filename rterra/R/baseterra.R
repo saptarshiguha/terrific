@@ -9,10 +9,14 @@ getClangPath <- function(clangcpp, pathIsGiven=NULL){
     if(!is.null(pathIsGiven)){
         pathIsGiven
     }else{
-        fi <- system.file("cheaders","dummy.c",package="rterra")
-        a1 <- system(sprintf("%s '-###' -c %s 2>&1 ",clangcpp,fi),intern=TRUE)
-            rd <- which(grepl("resource-dir",v<-strsplit(gsub(' ','\n',paste(a1,collapse="\n")),"\n")[[1]]))
-        sprintf("%s/include",normalizePath(gsub('"',"",v[rd+1])))
+        ## fi <- system.file("cheaders","dummy.c",package="rterra")
+        ## a1 <- system(sprintf("%s '-###' -c %s 2>&1 ",clangcpp,fi),intern=TRUE)
+        ##     rd <- which(grepl("resource-dir",v<-strsplit(gsub(' ','\n',paste(a1,collapse="\n")),"\n")[[1]]))
+        ## x1 <- sprintf("%s/include",normalizePath(gsub('"',"",v[rd+1])))
+        x2 <- sprintf("%s/clangheaders/", system.file(package="rterra"))
+        ## print(x1)
+        ## print(x2)
+        x2
     }
 }
 
@@ -32,10 +36,13 @@ tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
       a1 <- paste(c(  system.file("cheaders",package="rterra"),
                     if(!is.null(rcppflags)) rcppflags else processCppFlags(system("R CMD config --cppflags",intern=TRUE))
                     ),collapse=";")
+      ## a1 <-sprintf("%s/include", system.file(package="rterra"))
   else
     a1 <- paste(includes,collapse=";")
 
-  a1 <- sprintf("%s;%s;%s;.",getClangPath(clang,clangIncludes),a1, getwd())
+  a1 <- sprintf("%s;%s;%s;.",
+                getClangPath(clang,clangIncludes)
+                ,a1, getwd())
   if(options$debug>0){
       cat(sprintf("[terrific] INCLUDE_PATH=%s\n", a1))
   }
@@ -181,3 +188,17 @@ processLibFlags <- function(l)
   unique(unlist(sapply(l, .processLibFlags)))
 
                   
+##' Add search paths
+##' @param a directory root
+##' @param includecd should we include the current directiory too?
+##' @export
+terraAddLookupPaths <- function(path,includecd=TRUE){
+    terraAddRequirePaths(paste(path,c("?.lua","?/init.lua"),sep="/",collapse=";"))
+    terraAddRequirePaths(paste(path,c("?.t","?/init.t"),sep="/",collapse=";"))
+    terraAddGeneralPaths(paste(path,"?.so",sep="/",collapse=";"),"package.cpath")
+    if(includecd){
+        terraAddRequirePaths(sprintf("%s/?.lua",getwd()))
+        terraAddRequirePaths(sprintf("%s/?.t",getwd()))
+        terraAddGeneralPaths(paste(getwd(),"?.so",sep="/",collapse=";"),"package.cpath")
+    }
+}

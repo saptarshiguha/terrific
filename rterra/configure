@@ -48,7 +48,8 @@ if [ $OS = 'Darwin' ]; then
     install_name_tool -id  "@rpath/libterra.so" $MDEST/libterra.so
 fi
 
-cd ..
+cd ../..
 
-
-
+# ls -l
+echo "[rterra] Copying Clang Includes"
+Rscript copyclanginclude.R

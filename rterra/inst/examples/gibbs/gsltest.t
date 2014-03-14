@@ -1,6 +1,9 @@
 terralib.require("typesandfunctions")
 
 
+gslcdf = terralib.includecstring [[ 
+ #include <gsl/gsl_cdf.h>
+]]
 
 gsl = terralib.includecstring [[
 #include <gsl/gsl_rng.h>

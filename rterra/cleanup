@@ -7,3 +7,4 @@ rm src/tcuda.h
 rm src/lua.hpp
 rm src/libluajit*
 rm -rf src/terra
+rm -rf inst/clangheaders
