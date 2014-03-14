@@ -1,0 +1,7 @@
+cfile <- sprintf("%s/inst/cheaders/dummy.c", Sys.getenv("PWD"))
+clangbin <- "clang" # system("whereis clang", intern=TRUE)
+a1 <- system(sprintf("%s '-###' -c %s 2>&1 ",clangbin,cfile),intern=TRUE)
+rd <- which(grepl("resource-dir",v<-strsplit(gsub(' ','\n',paste(a1,collapse="\n")),"\n")[[1]]))
+rdir <- sprintf("%s/include",normalizePath(gsub('"',"",v[rd+1])))
+print(rdir)
+system(paste("cp -r ", rdir, sprintf("%s/inst/",Sys.getenv("PWD"))))
