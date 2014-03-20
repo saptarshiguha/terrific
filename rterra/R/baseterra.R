@@ -191,6 +191,9 @@ processLibFlags <- function(l)
 ##' Add search paths
 ##' @param a directory root
 ##' @param includecd should we include the current directiory too?
+##' @details Package authors can keep a 'terra' directory in the
+##' 'inst' folder of their package. Then call
+##' terraAddLookupPaths(system.file("terra", package=PACKAGE_NAME))
 ##' @export
 terraAddLookupPaths <- function(path,includecd=TRUE){
     terraAddRequirePaths(paste(path,c("?.lua","?/init.lua"),sep="/",collapse=";"))
@@ -202,3 +205,4 @@ terraAddLookupPaths <- function(path,includecd=TRUE){
         terraAddGeneralPaths(paste(getwd(),"?.so",sep="/",collapse=";"),"package.cpath")
     }
 }
+
