@@ -8,7 +8,7 @@
 
 static lua_State * L;
 extern uintptr_t R_CStackLimit;
-#define MY_ERR_BUF 1024*64
+#define MY_ERR_BUF 1024*1024
 const char* RERR_OBJNOTSTRING= "error object is not a string";
 const char* RERR_TERRIFIC= ": ";
 const char* RERR_STRANGETABLE= "you are returning strange tables";
@@ -38,6 +38,13 @@ extern "C" {
       lua_settable(L, LUA_REGISTRYINDEX);
     }
     return(s);  
+  }
+  SEXP isInitialized(SEXP r0){
+    SEXP s=R_NilValue;
+    if(L){
+      s=R_NaString;
+    }
+    return s;
   }
   int traceback (lua_State *L) {
     if (!lua_isstring(L, 1))  /* 'message' not a string? */

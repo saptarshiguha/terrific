@@ -1,6 +1,6 @@
 \name{getClangPath}
 \alias{getClangPath}
-\title{##' Gets clangs builtin paths}
+\title{Gets clangs builtin paths}
 \usage{
 getClangPath(clangcpp, pathIsGiven = NULL)
 }
@@ -11,6 +11,6 @@ getClangPath(clangcpp, pathIsGiven = NULL)
 path
 }
 \description{
-##' Gets clangs builtin paths
+Gets clangs builtin paths
 }
 

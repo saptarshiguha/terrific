@@ -1,7 +1,7 @@
 ##' @export
 terrals <- function(a) ls(a)
 
-##' ##' Gets clangs builtin paths
+##' Gets clangs builtin paths
 ##' @param clangccp path to clang/clang++ binary
 ##' @return path
 ##' @export
@@ -18,6 +18,12 @@ getClangPath <- function(clangcpp, pathIsGiven=NULL){
         ## print(x2)
         x2
     }
+}
+##' has terra initialized?
+##' return TRUE if yes
+##' @export
+thasinitialized <- function(){
+    if(is.na(.Call("isInitialized",NULL))) TRUE else FALSE
 }
 
 ##' initializes the terra subsystem
@@ -59,8 +65,8 @@ tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
   .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
   res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")))
   ## terraAddRequirePaths(system.file("examples",package="rterra"))
-  terraStr("terralib.require('typesandfunctions')")
-  terraStr("terralib.require('callterra')")
+  terraStr("R,Rbase = terralib.require('typesandfunctions')")
+  terraStr("Rt = terralib.require('callterra')")
   ## terraFile(system.file("examples","tests.t",package="rterra"))
   TRUE
 }

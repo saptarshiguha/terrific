@@ -1,7 +1,7 @@
-terralib.require('typesandfunctions')
+local R,Rbase = terralib.require('typesandfunctions')
 require('ffi')
 
-Rt = {}
+local Rt = {}
 
 local t = { {"Double",double}, {"Integer",int},{"Complex",R.Complex},{"Raw",int8}}
 for i=1,#t do

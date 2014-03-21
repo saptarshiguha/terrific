@@ -1,5 +1,5 @@
 terralib.require("base")
-Rbase   = terralib.includecstring [[
+local Rbase   = terralib.includecstring [[
   #include <rterra.h>
 ]]
 function Rbase.ptable(w)   for key,value in pairs(w) do print(key,value) end end
@@ -7,7 +7,7 @@ function Rbase.ptable(w)   for key,value in pairs(w) do print(key,value) end end
 Rbase.malloc = stdlib.malloc
 Rbase.free = stdlib.free
 
-R = {}
+local  R = {}
 R.types = { NILSXP              = 0, SYMSXP		= 1, LISTSXP		= 2,	
 	    CLOSXP		= 3, ENVSXP		= 4, PROMSXP		= 5,	
 	    LANGSXP		= 6, SPECIALSXP	        = 7, BUILTINSXP	        = 8,	
