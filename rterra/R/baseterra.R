@@ -54,7 +54,7 @@ tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
       cat(sprintf("[terrific] INCLUDE_PATH=%s\n", a1))
   }
   Sys.setenv(INCLUDE_PATH=a1)
-  a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),luastate,,PACKAGE="rterra")
+  a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),luastate,PACKAGE="rterra")
   if(is.character(a)) error(sprintf("[terrific error]: %s",a))
   ## if(missing(libraries)){
   ##   ## maybe works for Linux, probably not Mac ...
