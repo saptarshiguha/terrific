@@ -1,4 +1,4 @@
-local R,Rbase = terralib.require('typesandfunctions')
+-- local R,Rbase = terralib.require('typesandfunctions')
 require('ffi')
 
 local Rt = {}
@@ -60,7 +60,6 @@ local function typedArray(atype)
    Rt[ "new" .. pa.pfx] =   terra (length : int)
       var a : ArrayT
       a.sexp = Rbase.Rf_allocVector([atype], length)
-      -- ffi.gc(a.sexp,R.release)
       a.ptr = [pa.ptraccess](a.sexp)
       a.length = length;
       -- R.preserve(a.sexp)
@@ -82,7 +81,6 @@ local function typedArray(atype)
       a.length = Rbase.LENGTH(other);
       return a
    end
-   
    -- Creates an newialized array from the other, where other is the native type
    -- @param initial intial values of vector
    -- @param li the length of the initial values vector
@@ -143,6 +141,9 @@ local function typedArray(atype)
    	 a.base = [&double](self.ptr)
 	 return a
       end
+   end
+   function ArrayT:__typename()
+      return "RType_" .. pa.pfx
    end
    terra ArrayT:asMatrixDouble(i:int, j:int)
       -- var a = [&Rt.MatrixDouble](stdlib.malloc(sizeof(Rt.MatrixDouble)))
@@ -457,10 +458,7 @@ R.Robj = function(o,...)
       o.type = lookup[ type(o.type)][o.type]
       local f = methods[o.type].metamethods.__luametatable.__new(o)
       return(f)
-      -- return terralib.new(methods[ o.type ],o)
    else
-      -- return methods[Rbase.TYPEOF(o)](o)
-      -- local f =  terralib.new(methods[Rbase.TYPEOF(o)],o)
       local f = methods[Rbase.TYPEOF(o)].metamethods.__luametatable.__new(o)
       return(f)
    end

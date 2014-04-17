@@ -6,7 +6,7 @@ function Rbase.ptable(w)   for key,value in pairs(w) do print(key,value) end end
 
 Rbase.malloc = stdlib.malloc
 Rbase.free = stdlib.free
-
+Rbase.cincludesearchpath = {}
 local  R = {}
 R.types = { NILSXP              = 0, SYMSXP		= 1, LISTSXP		= 2,	
 	    CLOSXP		= 3, ENVSXP		= 4, PROMSXP		= 5,	
@@ -285,7 +285,8 @@ R.asMatrix = function(obj,...)
    return R._matrices[ obj.type ].metamethods.__luametatable.__new( obj,...)
 end
 
-return R,Rbase
+return function()   return R,Rbase       end
+
  
 
 

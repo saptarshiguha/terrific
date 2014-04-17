@@ -33,10 +33,11 @@ thasinitialized <- function(){
 ##' @param clangIncludes provide your own path to the clang includes, if missing rterra will try and find it
 ##' @param rcppflags provide your own value for R CMD config --cppflags (if you do, a character vector)
 ##' @param options if verbose >0 then lots of output and if debug>0 then line numebrs in stack traces
+##' @param luatstate a preexisting laustate
 ##' @return TRUE upon success, error if it fails
 ##' @export
 tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
-                  ,rcppflags=NULL
+                  ,rcppflags=NULL, luastate=NULL
                   ,options=list(verbose=0L, debug=1L)){
   if(missing(includes))
       a1 <- paste(c(  system.file("cheaders",package="rterra"),
@@ -53,7 +54,7 @@ tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
       cat(sprintf("[terrific] INCLUDE_PATH=%s\n", a1))
   }
   Sys.setenv(INCLUDE_PATH=a1)
-  a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),PACKAGE="rterra")
+  a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),luastate,,PACKAGE="rterra")
   if(is.character(a)) error(sprintf("[terrific error]: %s",a))
   ## if(missing(libraries)){
   ##   ## maybe works for Linux, probably not Mac ...
@@ -65,7 +66,7 @@ tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
   .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
   res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")))
   ## terraAddRequirePaths(system.file("examples",package="rterra"))
-  terraStr("R,Rbase = terralib.require('typesandfunctions')")
+  terraStr("R,Rbase = terralib.require 'typesandfunctions' ()")
   terraStr("Rt = terralib.require('callterra')")
   ## terraFile(system.file("examples","tests.t",package="rterra"))
   TRUE
@@ -201,7 +202,7 @@ processLibFlags <- function(l)
 ##' 'inst' folder of their package. Then call
 ##' terraAddLookupPaths(system.file("terra", package=PACKAGE_NAME))
 ##' @export
-terraAddLookupPaths <- function(path,includecd=TRUE){
+terraAddLookupPaths <- function(path,packagename,includecd=TRUE){
     terraAddRequirePaths(paste(path,c("?.lua","?/init.lua"),sep="/",collapse=";"))
     terraAddRequirePaths(paste(path,c("?.t","?/init.t"),sep="/",collapse=";"))
     terraAddGeneralPaths(paste(path,"?.so",sep="/",collapse=";"),"package.cpath")
@@ -210,5 +211,6 @@ terraAddLookupPaths <- function(path,includecd=TRUE){
         terraAddRequirePaths(sprintf("%s/?.t",getwd()))
         terraAddGeneralPaths(paste(getwd(),"?.so",sep="/",collapse=";"),"package.cpath")
     }
+    terraStr(sprintf("Rbase.cincludesearchpath['%s'] = '%s'", packagename, path[1]))
 }
 

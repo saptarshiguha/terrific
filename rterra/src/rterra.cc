@@ -8,7 +8,7 @@
 
 static lua_State * L;
 extern uintptr_t R_CStackLimit;
-#define MY_ERR_BUF 1024*1024
+#define MY_ERR_BUF 1024*32
 const char* RERR_OBJNOTSTRING= "error object is not a string";
 const char* RERR_TERRIFIC= ": ";
 const char* RERR_STRANGETABLE= "you are returning strange tables";
@@ -19,10 +19,14 @@ extern "C" {
   void setCStackLimit(int a){
     R_CStackLimit = a;
   }
-  SEXP initTerrific(SEXP r0){
+  SEXP initTerrific(SEXP r0,SEXP r1){
     SEXP s=R_NilValue;
     if(!L){
-      L = luaL_newstate(); //create a plain lua state
+      if( r1 !=R_NilValue){
+	L = (lua_State*) R_ExternalPtrAddr(r1);
+      }else{
+	L = luaL_newstate(); //create a plain lua state
+      }
       if(!L){
 	Rf_error("(terra): %s","luaL_newstate returned null\n");
 	return(s);
