@@ -231,6 +231,45 @@ extern "C" {
     lua_pushlightuserdata(L, s7);
     return(carryOn(_n,7));
   }
+  SEXP doTerraFunc8(SEXP _n,SEXP tb,SEXP s1,SEXP s2, SEXP s3,SEXP s4, SEXP s5,SEXP s6,SEXP s7,SEXP s8){
+    setFunction(_n, tb);
+    lua_pushlightuserdata(L, s1);
+    lua_pushlightuserdata(L, s2);
+    lua_pushlightuserdata(L, s3);
+    lua_pushlightuserdata(L, s4);
+    lua_pushlightuserdata(L, s5);
+    lua_pushlightuserdata(L, s6);
+    lua_pushlightuserdata(L, s7);
+    lua_pushlightuserdata(L, s8);
+    return(carryOn(_n,8));
+  }
+  SEXP doTerraFunc9(SEXP _n,SEXP tb,SEXP s1,SEXP s2, SEXP s3,SEXP s4, SEXP s5,SEXP s6,SEXP s7,SEXP s8,SEXP s9){
+    setFunction(_n, tb);
+    lua_pushlightuserdata(L, s1);
+    lua_pushlightuserdata(L, s2);
+    lua_pushlightuserdata(L, s3);
+    lua_pushlightuserdata(L, s4);
+    lua_pushlightuserdata(L, s5);
+    lua_pushlightuserdata(L, s6);
+    lua_pushlightuserdata(L, s7);
+    lua_pushlightuserdata(L, s8);
+    lua_pushlightuserdata(L, s9);
+    return(carryOn(_n,9));
+  }
+  SEXP doTerraFunc10(SEXP _n,SEXP tb,SEXP s1,SEXP s2, SEXP s3,SEXP s4, SEXP s5,SEXP s6,SEXP s7,SEXP s8, SEXP s9,SEXP s10){
+    setFunction(_n, tb);
+    lua_pushlightuserdata(L, s1);
+    lua_pushlightuserdata(L, s2);
+    lua_pushlightuserdata(L, s3);
+    lua_pushlightuserdata(L, s4);
+    lua_pushlightuserdata(L, s5);
+    lua_pushlightuserdata(L, s6);
+    lua_pushlightuserdata(L, s7);
+    lua_pushlightuserdata(L, s8);
+    lua_pushlightuserdata(L, s9);
+    lua_pushlightuserdata(L, s10);
+    return(carryOn(_n,10));
+  }
 
   
   SEXP initLibraryLoad(SEXP r1,SEXP r2,SEXP r0){
