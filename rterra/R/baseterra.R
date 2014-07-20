@@ -13,7 +13,7 @@ getClangPath <- function(clangcpp, pathIsGiven=NULL){
         ## a1 <- system(sprintf("%s '-###' -c %s 2>&1 ",clangcpp,fi),intern=TRUE)
         ##     rd <- which(grepl("resource-dir",v<-strsplit(gsub(' ','\n',paste(a1,collapse="\n")),"\n")[[1]]))
         ## x1 <- sprintf("%s/include",normalizePath(gsub('"',"",v[rd+1])))
-        x2 <- sprintf("%s/clangheaders/", system.file(package="rterra"))
+        x2 <- sprintf("%s/include/", system.file(package="rterra"))
         ## print(x1)
         ## print(x2)
         x2
