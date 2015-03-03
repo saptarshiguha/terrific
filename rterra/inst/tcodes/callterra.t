@@ -1,4 +1,4 @@
--- local R,Rbase = terralib.require('typesandfunctions')
+-- local R,Rbase = require('typesandfunctions')
 require('ffi')
 
 local Rt = {}

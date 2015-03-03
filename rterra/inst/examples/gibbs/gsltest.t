@@ -1,4 +1,4 @@
-terralib.require("typesandfunctions")
+require("typesandfunctions")
 
 
 gslcdf = terralib.includecstring [[ 

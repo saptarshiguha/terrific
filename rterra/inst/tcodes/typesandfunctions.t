@@ -1,4 +1,4 @@
-terralib.require("base")
+require("base")
 local Rbase   = terralib.includecstring [[
   #include <rterra.h>
 ]]

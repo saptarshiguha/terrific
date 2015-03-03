@@ -66,10 +66,10 @@ tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
   res <- terraFile(bp)
   libraries <- c(libraries,  system.file("libs","rterra.so",package="rterra"))
   .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
-  res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")))
+  res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")),terra=TRUE)
   ## terraAddRequirePaths(system.file("examples",package="rterra"))
-  terraStr("R,Rbase = terralib.require 'typesandfunctions' ()")
-  terraStr("Rt = terralib.require('callterra')")
+  terraStr("R,Rbase = require 'typesandfunctions' ()")
+  terraStr("Rt = require('callterra')")
   ## terraFile(system.file("examples","tests.t",package="rterra"))
   TRUE
 }
@@ -133,8 +133,12 @@ terraAddIncludePaths <- function(paths){
 ##' Appends 'paths' to the package.path variable
 ##' @seealso \code{\link{terraAddIncludePaths}},\code{\link{terraLinkLibrary}},,\code{\link{terraAddGeneralPaths}}
 ##' @export 
-terraAddRequirePaths <- function(modulenames){
+terraAddRequirePaths <- function(modulenames,terra=FALSE){
+if(!terra){
     terraAddGeneralPaths(modulenames, "package.path")
+}else{
+        terraAddGeneralPaths(modulenames, "package.terrapath")
+}
 }
 
 ##' Updates a search path

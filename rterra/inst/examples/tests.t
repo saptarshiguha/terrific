@@ -1,5 +1,5 @@
-terralib.require("typesandfunctions")
-terralib.require("callterra")
+require("typesandfunctions")
+require("callterra")
 
 -- WRONG API
 
