@@ -157,9 +157,9 @@ local function typedArray(atype)
 end
 
 Rt.IntegerVector	= typedArray(R.types.INTSXP)
---Rt.IntegerVector.metamethods.__typename=function(self)
---                                 return "IntegerVector"
---end
+Rt.IntegerVector.metamethods.__typename=function(self)
+                                 return "IntegerVector"
+end
 Rt.RealVector		= typedArray(R.types.REALSXP)
 Rt.RealVector.metamethods.__typename=function(self)
                                  return "RealVector"
