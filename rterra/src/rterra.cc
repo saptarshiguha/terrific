@@ -97,6 +97,8 @@ extern "C" {
     lua_pushcfunction(L, traceback);  /* push traceback function */
     lua_insert(L, base);  /* put it under chunk and args */
     signal(SIGINT, laction);
+    signal(SIGQUIT, laction);
+    signal(SIGTERM, laction);
     status = lua_pcall(L, narg, 1, base);
     signal(SIGINT, SIG_DFL);
     lua_remove(L, base);

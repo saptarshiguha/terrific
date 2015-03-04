@@ -186,6 +186,7 @@ struct R.asEnvironment
 }
 local lsF = R.makeRFunction("terrals",1, R.getNamespace("rterra"))
 
+
 local emt =  {
    -- need pairs support
    -- __pairs = function(a)
@@ -224,7 +225,7 @@ local emt =  {
    end
 }
 R.asEnvironment.metamethods.__luametatable = emt
-
+R.asEnvironment.metamethods.__typename=function(self) return "Environment" end
 
 -- attributes
 local getAttr = function(obj, attr)

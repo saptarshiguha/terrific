@@ -159,10 +159,25 @@ local function typedArray(atype)
 end
 
 Rt.IntegerVector	= typedArray(R.types.INTSXP)
+Rt.IntegerVector.metamethods.__typename=function(self)
+                                 return "IntegerVector"
+end
 Rt.RealVector		= typedArray(R.types.REALSXP)
+Rt.RealVector.metamethods.__typename=function(self)
+                                 return "RealVector"
+end
 Rt.RawVector		= typedArray(R.types.RAWSXP)
+Rt.RawVector.metamethods.__typename=function(self)
+                                 return "RawVector"
+end
 Rt.LogicalVector	= typedArray(R.types.LGLSXP)
+Rt.LogicalVector.metamethods.__typename=function(self)
+                                 return "LogicalVector"
+end
 Rt.ComplexVector	= typedArray(R.types.CPLXSXP)
+Rt.ComplexVector.metamethods.__typename=function(self)
+                                 return "ComplexVector"
+end
 
 -- ------------------------------------------
 -- some specializations for Logical Vectors
@@ -359,6 +374,9 @@ local emt = {
 }
 Rt.StringVector.metamethods.__luametatable = emt
 methods[R.types.STRSXP] = Rt.StringVector --fi.metatype(Rt.StringVector:cstring(), emt)
+Rt.StringVector.metamethods.__typename=function(self)
+                                 return "StringxVector"
+end
 
 
 Rt.ListVector = struct 
@@ -429,10 +447,13 @@ local emt = {
 }
 Rt.ListVector.metamethods.__luametatable = emt
 methods[R.types.VECSXP] = Rt.ListVector 
+Rt.ListVector.metamethods.__typename=function(self)
+                                 return "ListVector"
+end
 
 
-methods[R.types.NILSXP] = {metamethods = { __luametatable = { __new = function(a) return R.constants.NilValue end }}}
-methods[R.types.ENVSXP] = {metamethods = { __luametatable = { __new = function(a) return R.asEnvironment(a) end }}}
+ methods[R.types.NILSXP] = {metamethods = {__typename=function(self) return "RNULL" end, __luametatable = { __new = function(a) return R.constants.NilValue end }}}
+ methods[R.types.ENVSXP] = {metamethods = {__luametatable ={ __new = function(a) return R.asEnvironment.metamethods.__luametatable.__new(a) end }}}
 
 
 local lookup = { string = {}}
