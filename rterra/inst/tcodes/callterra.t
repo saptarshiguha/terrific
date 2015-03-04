@@ -142,9 +142,7 @@ local function typedArray(atype)
 	 return a
       end
    end
-   function ArrayT:__typename()
-      return "RType_" .. pa.pfx
-   end
+
    terra ArrayT:asMatrixDouble(i:int, j:int)
       -- var a = [&Rt.MatrixDouble](stdlib.malloc(sizeof(Rt.MatrixDouble)))
       var a =Rt.MatrixDouble{ ([&double](self.ptr)) , i,j}
@@ -159,9 +157,9 @@ local function typedArray(atype)
 end
 
 Rt.IntegerVector	= typedArray(R.types.INTSXP)
-Rt.IntegerVector.metamethods.__typename=function(self)
-                                 return "IntegerVector"
-end
+--Rt.IntegerVector.metamethods.__typename=function(self)
+--                                 return "IntegerVector"
+--end
 Rt.RealVector		= typedArray(R.types.REALSXP)
 Rt.RealVector.metamethods.__typename=function(self)
                                  return "RealVector"
@@ -375,7 +373,7 @@ local emt = {
 Rt.StringVector.metamethods.__luametatable = emt
 methods[R.types.STRSXP] = Rt.StringVector --fi.metatype(Rt.StringVector:cstring(), emt)
 Rt.StringVector.metamethods.__typename=function(self)
-                                 return "StringxVector"
+                                 return "StringVector"
 end
 
 
