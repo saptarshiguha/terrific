@@ -75,7 +75,9 @@ end
 -- R.protectMe=R.lprotect
 R.protectMe = function(o)
    Rbase.R_PreserveObject(o.sexp)
+   return o
 end
+
 R.unprotectMe = function(n)
    -- n = n or 1
    -- if type(n) ~= 'number' then
