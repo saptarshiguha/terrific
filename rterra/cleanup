@@ -1,10 +1,8 @@
-rm src/*.o
-rm src/*.so
-rm src/lua*.h
-rm src/lauxlib.h
-rm src/terra.h
-rm src/tcuda.h
-rm src/lua.hpp
-rm src/libluajit*
-rm -rf src/terra
-rm -rf inst/clangheaders
+rm -rf src/*.o
+rm -rf src/*.so
+rm -rf src/include
+
+rm -rf inst/cheaders/include
+rm -rf inst/tcodes/terra
+
+

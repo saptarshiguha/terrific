@@ -2,23 +2,12 @@
 terrals <- function(a) ls(a)
 
 ##' Gets clangs builtin paths
-##' @param clangccp path to clang/clang++ binary
 ##' @return path
 ##' @export
-getClangPath <- function(clangcpp, pathIsGiven=NULL){
-    if(!is.null(pathIsGiven)){
-        pathIsGiven
-    }else{
-        ## fi <- system.file("cheaders","dummy.c",package="rterra")
-        ## a1 <- system(sprintf("%s '-###' -c %s 2>&1 ",clangcpp,fi),intern=TRUE)
-        ##     rd <- which(grepl("resource-dir",v<-strsplit(gsub(' ','\n',paste(a1,collapse="\n")),"\n")[[1]]))
-        ## x1 <- sprintf("%s/include",normalizePath(gsub('"',"",v[rd+1])))
-        x2 <- sprintf("%s/clanginclude", system.file(package="rterra"))
-        ## print(x1)
-        ## print(x2)
-        x2
-    }
+getClangPath <- function(){
+    sprintf("%s/cheaders/include/clang_resource/include", system.file(package="rterra"))
 }
+
 ##' has terra initialized?
 ##' return TRUE if yes
 ##' @export
@@ -29,47 +18,32 @@ thasinitialized <- function(){
 
 
 ##' initializes the terra subsystem
-##' @param clang path to clang/clang++ binary
-##' @param includes is a vector of include directories
-##' @param libraries path to libraries to load
-##' @param clangIncludes provide your own path to the clang includes, if missing rterra will try and find it
 ##' @param rcppflags provide your own value for R CMD config --cppflags (if you do, a character vector)
-##' @param options if verbose >0 then lots of output and if debug>0 then line numebrs in stack traces
 ##' @param luatstate a preexisting laustate
+##' @param options if verbose >0 then lots of output and if debug>0 then line numebrs in stack traces
 ##' @return TRUE upon success, error if it fails
 ##' @export
-tinit <- function(clang="clang",includes,libraries=NULL,clangIncludes=NULL
-                  ,rcppflags=NULL, luastate=NULL
-                  ,options=list(verbose=0L, debug=1L)){
-  if(missing(includes))
-      a1 <- paste(c(  system.file("cheaders",package="rterra"),
-                    if(!is.null(rcppflags)) rcppflags else processCppFlags(system("R CMD config --cppflags",intern=TRUE))
-                    ),collapse=";")
-      ## a1 <-sprintf("%s/include", system.file(package="rterra"))
-  else
-    a1 <- paste(includes,collapse=";")
-
-  a1 <- sprintf("%s;%s;%s;.",
-                getClangPath(clang,clangIncludes)
-                ,a1, getwd())
-  if(options$debug>0){
-      cat(sprintf("[terrific] INCLUDE_PATH=%s\n", a1))
-  }
-  Sys.setenv(INCLUDE_PATH=a1)
-  a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),luastate,PACKAGE="rterra")
-  if(is.character(a)) error(sprintf("[terrific error]: %s",a))
-  ## if(missing(libraries)){
-  ##   ## maybe works for Linux, probably not Mac ...
-  ##     libraries <- if(!is.null(rldflags)) rldflags else processLibFlags(system("R CMD config --ldflags",intern=TRUE))
-  ## }
-  bp <- system.file("tcodes","base.t",package="rterra")
-  res <- terraFile(bp)
-  libraries <- c(libraries,  system.file("libs","rterra.so",package="rterra"))
-  .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
-  res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")),terra=TRUE)
-  ## terraAddRequirePaths(system.file("examples",package="rterra"))
-  terraStr("R,Rbase = require 'typesandfunctions' ()")
-  terraStr("Rt = require('callterra')")
+tinit <- function(
+    rcppflags = processCppFlags(system("R CMD config --cppflags",intern=TRUE))
+   ,luastate  = NULL
+   ,options   = list(verbose=0L, debug=1L)
+    ){
+    a1 <- paste(c(  system.file("cheaders",package="rterra"),rcppflags),collapse=";")
+    a1 <- sprintf("%s;%s;%s;.", getClangPath() ,a1, getwd())
+    if(options$debug>0){
+        cat(sprintf("[terrific] INCLUDE_PATH=%s\n", a1))
+    }
+    Sys.setenv(INCLUDE_PATH=a1)
+    a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),luastate,PACKAGE="rterra")
+    if(is.character(a)) error(sprintf("[terrific error]: %s",a))
+    bp <- system.file("tcodes","base.t",package="rterra")
+    res <- terraFile(bp)
+    libraries <- system.file("libs","rterra.so",package="rterra")
+    .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
+    res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")),terra=TRUE)
+    res = terraAddRequirePaths(sprintf("%s/terra/?.t",system.file("tcodes",package="rterra")),terra=TRUE)
+    terraStr("R,Rbase = require 'typesandfunctions' ()")
+    terraStr("Rt = require('callterra')")
   ## terraFile(system.file("examples","tests.t",package="rterra"))
   TRUE
 }
@@ -138,7 +112,7 @@ if(!terra){
     terraAddGeneralPaths(modulenames, "package.path")
 }else{
         terraAddGeneralPaths(modulenames, "package.terrapath")
-}
+    }
 }
 
 ##' Updates a search path

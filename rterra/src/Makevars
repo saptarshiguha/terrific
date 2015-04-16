@@ -5,7 +5,9 @@ else
 DYNFLAGS = -Wl,-rpath -Wl,${R_PACKAGE_DIR}/libs -Wl,-rpath -Wl,./  -dynamiclib  -fPIC -L. 
 endif
 
+## I need this to strip these off
+RLDFLAGS = `"$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e "cat(gsub('-pagezero_size 10000 -image_base 100000000','',system('$(R_HOME)/bin/R CMD config --ldflags',intern=TRUE)))"`
 rlib: rterra.cc
-	g++  -O0 -g -fPIC -c -o rterra.o rterra.cc `R CMD config --cppflags`  -I.
-	g++ -O0  -g $(DYNFLAGS) rterra.o  libluajit.a  -lterra  -o rterra.so  `R CMD config --ldflags`  
+	g++  -O0 -g -fPIC -c -o rterra.o rterra.cc `R CMD config --cppflags`  -I. -I./include
+	g++   $(DYNFLAGS)  ${RLDFLAGS}  rterra.o  -lterra  -o rterra.so  
 

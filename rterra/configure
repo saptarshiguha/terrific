@@ -1,59 +1,21 @@
 #!/bin/sh
-cd src
-if [ ! -d "terra" ]; then
-    echo "\n[rterra] Cloning The Terra Repository from GitHub"
-    git clone git://github.com/zdevito/terra.git
-fi
-cd terra
-              
-echo "\n[rterra] Using your LLVM_CONFIG(current:= ${LLVM_CONFIG})  environment variable for llvm-config location"
-echo "[rterra] Also checking for ENABLE_CUDA=1 or 0 for CUDA usage, if set,  set CUDA_HOME"
-ENABLE_CUDA=$ENABLE_CUDA
-cat << EOF > Makefile.inc
-LLMV_CONFIG="$LLVM_CONFIG"
-EOF
-if [ "$ENABLE_CUDA" = "1" ]; then
-    if [ -z "$CUDA_HOME" ]; then
-	echo "[rterra WARNING]: You have ENABLE_CUDA set to 1 but CUDA_HOME is empty, terra will use defaults"
-    fi
-    cat << EOF >> Makefile.inc
-ENABLE_CUDA=$ENABLE_CUDA
-CUDA_HOME=$CUDA_HOME
-EOF
-fi
 
 OS=`uname`
-echo "\n[rterra] Making Terra Shared Library"
-cat Makefile.inc
 ## sed escapes me ... or not this time
 if [ $OS = 'Darwin' ]; then
-    sed -i '' -e 's/(cd $(LUAJIT_DIR); make CC=$(CC))/(cd $(LUAJIT_DIR); make STATIC_CC="$(CC) -fPIC" CC=$(CC))/'  Makefile
+    echo "Copying OSX specific files into src/ folder"
+    cp -r os-specific/osx/* src/
+    cp -r os-specific/osx/include inst/cheaders/
+    mkdir inst/tcodes/terra
+    cp -r os-specific/osx/include/*.t inst/tcodes/terra
 else
-    sed -i  's/(cd $(LUAJIT_DIR); make CC=$(CC))/(cd $(LUAJIT_DIR); make STATIC_CC="$(CC) -fPIC" CC=$(CC))/'  Makefile
-fi
-make build/libterra.so 
-
-
-echo "[rterra] Copying required libraries"
-MDEST=../
-
-cp   build/libterra.so src/terra.h src/tcuda.h $MDEST
-
-for x  in lauxlib.h  luaconf.h  lua.h  lua.hpp  luajit.h  lualib.h  libluajit.a
-do
-    cp build/LuaJIT-*/src/$x $MDEST
-done
-
-if [ $OS = 'Darwin' ]; then
-    install_name_tool -id  "@rpath/libterra.so" $MDEST/libterra.so
+    echo "Copying Linux specific files into src/ folder"
+    cp -r  os-specific/linux/* src/
+    cp -r os-specific/linux/include inst/cheaders/
+    mkdir inst/tcodes/terra
+    cp -r os-specific/linux/include/*.t inst/tcodes/terra/
 fi
 
-echo "[rterra] Copy lib folder from terra tests"
-cp  tests/lib/* ../../inst/tcodes/
+cp src/rterra.h inst/cheaders/
 
-cd ../..
-
-# ls -l
-echo "[rterra] Copying Clang Includes"
-Rscript copyclanginclude.R
 
