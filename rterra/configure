@@ -6,14 +6,14 @@ if [ $OS = 'Darwin' ]; then
     echo "Copying OSX specific files into src/ folder"
     cp -r os-specific/osx/* src/
     cp -r os-specific/osx/include inst/cheaders/
-    mkdir inst/tcodes/terra
-    cp -r os-specific/osx/include/terra/*.t inst/tcodes/terra
+    mkdir -p inst/tcodes/terra
+    cp -r os-specific/osx//share/terra/* inst/tcodes/terra/
 else
     echo "Copying Linux specific files into src/ folder"
-    cp -r  os-specific/linux/* src/
+    cp -r os-specific/linux/* src/
     cp -r os-specific/linux/include inst/cheaders/
-    mkdir inst/tcodes/terra
-    cp -r os-specific/linux/include/terra/*.t inst/tcodes/terra/
+    mkdir -p inst/tcodes/terra
+    cp -r os-specific/linux//share/terra/* inst/tcodes/terra/
 fi
 
 cp src/rterra.h inst/cheaders/
