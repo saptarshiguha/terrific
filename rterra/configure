@@ -1,19 +1,9 @@
 #!/bin/sh
 
-OS=`uname`
-## sed escapes me ... or not this time
-if [ $OS = 'Darwin' ]; then
-    echo "Copying OSX specific files into src/ folder"
-    cp -r os-specific/osx/* src/
-    cp -r os-specific/osx/include inst/cheaders/
-    mkdir -p inst/tcodes/terra
-    cp -r os-specific/osx//share/terra/* inst/tcodes/terra/
-else
-    echo "Copying Linux specific files into src/ folder"
-    cp -r os-specific/linux/* src/
-    cp -r os-specific/linux/include inst/cheaders/
-    mkdir -p inst/tcodes/terra
-    cp -r os-specific/linux//share/terra/* inst/tcodes/terra/
-fi
+cp -r copies/* src/
+cp -r copies/include inst/cheaders/
+mkdir -p inst/tcodes/terra
+cp -r copies/share/terra/* inst/tcodes/terra/
+
 
 cp src/rterra.h inst/cheaders/
