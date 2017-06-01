@@ -1,9 +1,7 @@
 #!/bin/sh
 
 cp -r copies/* src/
-cp -r copies/include inst/cheaders/
-mkdir -p inst/tcodes/terra
-cp -r copies/share/terra/* inst/tcodes/terra/
+cp -r copies/include/* inst/include/
+mkdir -p inst/luamodules
 
-
-cp src/rterra.h inst/cheaders/
+cp src/rterra.h inst/include/
