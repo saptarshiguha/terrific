@@ -42,8 +42,8 @@ tinit <- function(
     .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
     res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")),terra=TRUE)
     res = terraAddRequirePaths(sprintf("%s/terra/?.t",system.file("tcodes",package="rterra")),terra=TRUE)
-    terraStr("R,Rbase = require 'typesandfunctions' ()")
-    terraStr("Rt = require('callterra')")
+#    terraStr("R,Rbase = require 'typesandfunctions' ()")
+ #   terraStr("Rt = require('callterra')")
   ## terraFile(system.file("examples","tests.t",package="rterra"))
   TRUE
 }

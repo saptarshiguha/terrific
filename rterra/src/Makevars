@@ -1,10 +1,8 @@
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
-DYNFLAGS = -Wl,-rpath=${R_PACKAGE_DIR}/libs -Wl,-rpath=./ -L. -L./lib/ -shared -fPIC
-RLDFLAGS = `"$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e "cat(gsub('-pagezero_size 10000 -image_base 100000000','',system('$(R_HOME)/bin/R CMD config --ldflags',intern=TRUE)))"`
+DYNFLAGS = -Wl,-rpath=${R_PACKAGE_DIR}/libs -Wl,-rpath=./ -L. -L./lib/ -shared -fPIC -lcurses
 else
-DYNFLAGS = -Wl,-rpath -Wl,${R_PACKAGE_DIR}/libs -Wl,-rpath -Wl,./  -dynamiclib  -fPIC -L.  -L./lib/
-RLDFLAGS = `"$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e "cat(gsub('-pagezero_size 10000 -image_base 100000000','',system('$(R_HOME)/bin/R CMD config --ldflags',intern=TRUE)))"`
+DYNFLAGS = -Wl,-rpath -Wl,${R_PACKAGE_DIR}/libs -Wl,-rpath -Wl,./  -dynamiclib  -fPIC -L.  -L./lib/ -lcurses
 endif
 
 
@@ -13,4 +11,4 @@ endif
 
 rlib: rterra.cc
 	g++  -O0 -g -fPIC -c -o rterra.o rterra.cc `R CMD config --cppflags`  -I. -I./include -I./include/terra
-	g++   $(DYNFLAGS)  ${RLDFLAGS}  rterra.o  lib/libterra.a  -o rterra.so
+	g++   $(DYNFLAGS)  `R CMD config --ldflags` rterra.o  lib/libterra.a  -o rterra.so
