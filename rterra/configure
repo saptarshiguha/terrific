@@ -1,6 +1,5 @@
 #!/bin/sh
 cp -r copies/* src/
 cp -r copies/include/* inst/include/
-mkdir -p inst/luamodules
 
 cp src/rterra.h inst/include/
