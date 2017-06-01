@@ -1,12 +1,7 @@
 ##' @export
 terrals <- function(a) ls(a)
 
-##' Gets clangs builtin paths
-##' @return path
-##' @export
-getClangPath <- function(){
-    sprintf("%s/cheaders/include/clang_resource/include", system.file(package="rterra"))
-}
+
 
 ##' has terra initialized?
 ##' return TRUE if yes
@@ -18,9 +13,11 @@ thasinitialized <- function(){
 
 
 ##' initializes the terra subsystem
-##' @param rcppflags provide your own value for R CMD config --cppflags (if you do, a character vector)
+##' @param rcppflags provide your own value for R CMD config
+##'     --cppflags (if you do, a character vector)
 ##' @param luatstate a preexisting laustate
-##' @param options if verbose >0 then lots of output and if debug>0 then line numebrs in stack traces
+##' @param options if verbose >0 then lots of output and if debug>0
+##'     then line numebrs in stack traces
 ##' @return TRUE upon success, error if it fails
 ##' @export
 tinit <- function(
@@ -28,20 +25,28 @@ tinit <- function(
    ,luastate  = NULL
    ,options   = list(verbose=0L, debug=1L)
     ){
-    a1 <- paste(c(  system.file("cheaders",package="rterra"),rcppflags),collapse=";")
-    a1 <- sprintf("%s;%s;%s;.", getClangPath() ,a1, getwd())
+    a1 <- paste(c(  system.file("include",package="rterra"),rcppflags),collapse=";")
+    a1 <- sprintf("%s;%s;.",a1, getwd())
     if(options$debug>0){
         cat(sprintf("[terrific] INCLUDE_PATH=%s\n", a1))
     }
     Sys.setenv(INCLUDE_PATH=a1)
     a <- .Call("initTerrific",as.integer(c(options$verbose, options$debug)),luastate,PACKAGE="rterra")
     if(is.character(a)) error(sprintf("[terrific error]: %s",a))
-    bp <- system.file("tcodes","base.t",package="rterra")
+    bp <- system.file("luamodules","base.t",package="rterra")
     res <- terraFile(bp)
     libraries <- system.file("libs","rterra.so",package="rterra")
     .Call("initLibraryLoad",NULL,"___startit",libraries,PACKAGE="rterra")
-    res = terraAddRequirePaths(sprintf("%s/?.t",system.file("tcodes",package="rterra")),terra=TRUE)
-    res = terraAddRequirePaths(sprintf("%s/terra/?.t",system.file("tcodes",package="rterra")),terra=TRUE)
+    LUAMODPATH=system.file("luamodules",package="rterra")
+    res = terraAddGeneralPaths(sprintf("%s/?.t;%s/?/init.t"
+                                       ,LUAMODPATH,LUAMODPATH
+                                       ),"package.terrapath")
+    res = terraAddGeneralPaths(sprintf("%s/share/lua/5.1/?.lua;%s/share/lua/5.1/?/init.lua"
+                                       ,LUAMODPATH,LUAMODPATH
+                                       ),"package.path")
+    res = terraAddGeneralPaths(sprintf("%s/lib64/lua/5.1/?.so;"
+                                       ,LUAMODPATH
+                                       ),"package.cpath")
 #    terraStr("R,Rbase = require 'typesandfunctions' ()")
  #   terraStr("Rt = require('callterra')")
   ## terraFile(system.file("examples","tests.t",package="rterra"))

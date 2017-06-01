@@ -166,7 +166,8 @@ make
 
 ### Checkout Terrific
 
-Checkout rterra 
+Checkout rterra . We'll need LuaRocks to install some package into the
+`luamodules` folder.
 
 ```bash
 git clone https://github.com/saptarshiguha/terrific.git
@@ -187,6 +188,26 @@ And now,
 ```bash
 R CMD INSTALL .
 ```
-(or package it as a release)
 
+This will install a few Lua modules (e.g [moonscript](https://moonscript.org/)),
+penlight, lpeg etc ) into the share folder
+(or package it as a release). Note if you want to `require` moon programs, then
+remember to turn of Strict mode (or edit `moonscript/parse/env.lua` and add this
+line to the top)
+
+```lua
+Strict.strict,Strict.__newindex,Strict.__index = false, nil,nil
+```
+
+or run this before importing moon files
+
+```R
+library(rterra);tinit()
+[terrific] INCLUDE_PATH=/home/sguha/software/R_LIBS/rterra/include;/usr/include/R;/usr/include/R/R_ext;/home/sguha/tmp/rterrainstall/terrific/rterra;.
+[1] TRUE
+
+terraStr("Strict.strict,Strict.__newindex,Strict.__index = false, nil,nil")
+terraStr('require "moonscript"')
+terraStr('require "demo"') ## a moonscript file.
+```
 
