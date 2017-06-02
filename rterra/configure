@@ -3,7 +3,7 @@ cp -r copies/* src/
 cp -r copies/include/* inst/include/
 cp src/rterra.h inst/include/
 
-luarocks install --tree inst/luamodules/ moonscript
-luarocks install --tree inst/luamodules/ penlight
-luarocks install --tree inst/luamodules/ lpeg
+#luarocks install --tree inst/luamodules/ moonscript
+#luarocks install --tree inst/luamodules/ penlight
+#luarocks install --tree inst/luamodules/ lpeg
 

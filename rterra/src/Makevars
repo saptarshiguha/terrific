@@ -11,4 +11,4 @@ endif
 
 rlib: rterra.cc
 	g++  -O0 -g -fPIC -c -o rterra.o rterra.cc `R CMD config --cppflags`  -I. -I./include -I./include/terra
-	g++   $(DYNFLAGS)  `R CMD config --ldflags` rterra.o  lib/libterra.a  -o rterra.so
+	g++   $(DYNFLAGS)  `R CMD config --ldflags`  rterra.o  lib/libterra.a  -o rterra.so
